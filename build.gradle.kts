@@ -8,7 +8,7 @@ plugins {
     id("dev.architectury.loom") version "1.11.440"
 }
 
-version = "0.5.4+1.21.1" // https://semver.org/
+version = "0.5.4-unhardcoded.1+1.21.1" // https://semver.org/
 group = "com.lightning.northstar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 
 java {
@@ -25,6 +25,14 @@ architectury {
 }
 
 val generatedResources = file("src/generated")
+val fullDevRuntime = providers.gradleProperty("northstar.fullDevRuntime")
+    .map(String::toBoolean)
+    .getOrElse(false)
+
+fun devRuntimeEnabled(id: String): Boolean =
+    fullDevRuntime || providers.gradleProperty("northstar.devRuntime.$id")
+        .map(String::toBoolean)
+        .getOrElse(false)
 
 sourceSets.main {
     resources.srcDir(generatedResources)
@@ -70,9 +78,12 @@ repositories {
     maven("https://maven.blamejared.com/") // JEI
     maven("https://mvn.devos.one/snapshots")
     maven("https://maven.pkg.github.com/copycats-plus/copycats") {
+        content {
+            includeGroup("com.copycatsplus")
+        }
         credentials {
-            username = project.property("github.packages.username") as? String
-            password = project.property("github.packages.password") as? String
+            username = findProperty("github.packages.username") as? String ?: System.getenv("GITHUB_ACTOR") ?: ""
+            password = findProperty("github.packages.password") as? String ?: System.getenv("GITHUB_TOKEN") ?: ""
         }
     }
     maven("https://maven.ftb.dev/releases")
@@ -118,6 +129,7 @@ dependencies {
 
     modImplementation(variantOf(libs.create) { classifier("slim") }) {
         exclude(group = "maven.modrinth", module = "journeymap")
+        exclude(group = "info.journeymap", module = "journeymap-api-neoforge")
         exclude(group = "cc.tweaked")
     }
     modImplementation(libs.ponder.neoforge)
@@ -131,15 +143,41 @@ dependencies {
     modImplementation(libs.jei.neoforge)
     // should be modImplementation but loom said otherwise https://github.com/architectury/architectury-loom/issues/223, actually caused by
     // invalid config from copycats. exclude everything since it won't get remapped
-    implementation(libs.copycats) {
-        exclude(module = "*")
+    val configuredCopycatsJar = (findProperty("northstar.localCopycatsJar") as? String)
+        ?.let { file(it) }
+        ?.takeIf { it.isFile }
+    val detectedCopycatsJar = file(".gradle/local-libs").listFiles()
+        ?.firstOrNull { it.isFile && it.name.startsWith("copycats-") && it.name.endsWith(".jar") }
+    val localCopycatsJar = configuredCopycatsJar ?: detectedCopycatsJar
+    if (localCopycatsJar != null) {
+        compileOnly(files(localCopycatsJar))
+    } else {
+        implementation(libs.copycats) {
+            exclude(module = "*")
+        }
     }
-    modImplementation(libs.cdg)
-    modImplementation(libs.cca)
-    modImplementation(libs.kubejs)
-    modImplementation(libs.kubejs.create)
+    // Keep optional integration mods on the compile classpath without making the default client run depend on
+    // every Create addon combination. Use -Pnorthstar.fullDevRuntime=true when testing those integrations.
+    modCompileOnly(libs.cdg)
+    modCompileOnly(libs.cca)
+    modCompileOnly(libs.kubejs)
+    modCompileOnly(libs.kubejs.create)
     forgeRuntimeLibrary("dev.latvian.apps:tiny-java-server:1.0.0-build.26")
-    modImplementation(libs.tfmg)
+    modCompileOnly(libs.tfmg)
+
+    if (devRuntimeEnabled("cdg")) {
+        modRuntimeOnly(libs.cdg)
+    }
+    if (devRuntimeEnabled("cca")) {
+        modRuntimeOnly(libs.cca)
+    }
+    if (devRuntimeEnabled("kubejs")) {
+        modRuntimeOnly(libs.kubejs)
+        modRuntimeOnly(libs.kubejs.create)
+    }
+    if (devRuntimeEnabled("tfmg")) {
+        modRuntimeOnly(libs.tfmg)
+    }
 
     // Embeddium and Oculus have to be installed manually on the client as not to crash the server. keep jCPP as oculus crashes without it.
     modRuntimeOnly(libs.jcpp)

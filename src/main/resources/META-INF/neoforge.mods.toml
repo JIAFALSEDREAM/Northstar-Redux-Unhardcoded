@@ -1,7 +1,7 @@
 modLoader = "javafml"
 loaderVersion = "[0,)"
 license = "MIT"
-issueTrackerURL = "https://github.com/Astronauts-of-Create/Northstar-Redux/issues"
+issueTrackerURL = "https://github.com/JIAFALSEDREAM/Northstar-Redux-Unhardcoded/issues"
 
 
 [[mods]]
@@ -9,13 +9,17 @@ modId = "northstar"
 displayTest = "MATCH_VERSION"
 version = "${file.jarVersion}"
 
-displayName = "Northstar Redux"
-displayURL = "https://modrinth.com/project/northstar-redux"
+displayName = "Northstar Redux Unhardcoded"
+displayURL = "https://www.curseforge.com/minecraft/mc-mods/create-northstar-redux-unhardcoded"
 logoFile = "logo.png"
 credits = "Original mod by lightning2401."
 authors = "Redstonneur1256"
 description = '''
-Inspired by Micdoodle's Galacticraft, Northstar seeks to return players to the stars with the power of the Create mod. 
+Create: Northstar - Redux Unhardcoded is a transitional hardcode-removal fork of Northstar Redux for Minecraft 1.21.1 NeoForge.
+
+This build moves planet behavior, rocket and telescope lookups, environment rules, and related hardcoded text paths toward a shared registry-backed PlanetDefinition model. It preserves legacy planet ids for existing saves while exposing Java and KubeJS extension paths for packs and mods.
+
+The fork is focused on compatibility, extension plumbing, and scoped gameplay/content bug fixes inherited from upstream Redux, not new planet content or datapack/JSON planet loading.
 '''
 
 [[mixins]]
