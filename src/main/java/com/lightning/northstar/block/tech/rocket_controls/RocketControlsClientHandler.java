@@ -84,7 +84,7 @@ public class RocketControlsClientHandler {
             //Sync our visual launch time with the clients side (We dont want the number to fluctuate too much)
             if (Math.abs(rce.getLaunchTime() - launchTime) > 10) launchTime = rce.getLaunchTime();
             if (launchTime % 20 == 0 && launchTime != 0) { // yes this is terrible but the whole launch system is being redone anyways
-                player.displayClientMessage(Component.literal("T-" + (launchTime / 20)).withStyle(ChatFormatting.AQUA), true);
+                player.displayClientMessage(Component.translatable("northstar.contraption.controls.launch_countdown", launchTime / 20).withStyle(ChatFormatting.AQUA), true);
                 player.level().playSound(player, player.blockPosition(), SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.BLOCKS, 10, launchTime / 20 == 0 ? 10 : 1);
             }
             launchTime--;

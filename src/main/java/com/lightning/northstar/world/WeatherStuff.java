@@ -1,6 +1,6 @@
 package com.lightning.northstar.world;
 
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
+import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -30,8 +30,7 @@ public class WeatherStuff {
     // }
 
     public static void init() {
-        managedPlanets.put(null, NorthstarDimensions.MARS_DIM_KEY);
-        managedPlanets.put(null, NorthstarDimensions.VENUS_DIM_KEY);
+        managedPlanets.clear();
     }
 
     public Pair<Direction, Direction> getWindDirection(ResourceKey<Level> lev) {
@@ -58,13 +57,11 @@ public class WeatherStuff {
     }
 
     public static boolean hasWind(ResourceKey<Level> lev) {
-        return lev == NorthstarDimensions.MARS_DIM_KEY;
+        return NorthstarPlanets.hasWind(lev);
     }
 
     public static boolean hasWeather(ResourceKey<Level> lev) {
-        if (lev == NorthstarDimensions.MARS_DIM_KEY) return true;
-        if (lev == NorthstarDimensions.VENUS_DIM_KEY) return true;
-        return false;
+        return NorthstarPlanets.hasWeather(lev);
     }
 
 }

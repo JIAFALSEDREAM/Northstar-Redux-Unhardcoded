@@ -1,16 +1,13 @@
 package com.lightning.northstar.mixin;
 
 import com.lightning.northstar.contraption.rocket.RocketHandler;
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.lightning.northstar.world.oxygen.NorthstarOxygen;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -24,22 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class GravityStuffMixin {
     @Unique
     private static final double CONSTANT = 0.08;
-    private static final double EARTH_GRAV = 1;
-    private static final double MOON_GRAV = 0.16;
-    private static final double OUTER_MOON_GRAV = 0.06;
-    private static final double SUPER_GRAV = 4;
-    private static final double MARS_GRAV = 0.37;
-    private static final double VENUS_GRAV = 0.89;
-    private static final double MERCURY_GRAV = 0.38;
-
-
-    private static final double GANYMEDE_GRAV = 0.14;
-    private static final double TITAN_GRAV = 0.14;
-    private static final double EUROPA_GRAV = 0.13;
-
-    double PLANET_GRAV = 1;
     private int fall_disabled = 0;
-    //help
 
     @Inject(method = "travel", at = @At("TAIL"))
     public void northstar$travel(CallbackInfo ci) {
@@ -54,26 +36,14 @@ public class GravityStuffMixin {
         }
         Vec3 velocity = entity.getDeltaMovement();
         boolean isInOrbit = NorthstarPlanets.isInOrbit(entity.level().dimension());
-        if (entity.level().dimension() == NorthstarDimensions.MARS_DIM_KEY) {
-            PLANET_GRAV = MARS_GRAV;
-        } else if (entity.level().dimension() == NorthstarDimensions.VENUS_DIM_KEY) {
-            PLANET_GRAV = VENUS_GRAV;
-        } else if (entity.level().dimension() == NorthstarDimensions.MOON_DIM_KEY) {
-            PLANET_GRAV = MOON_GRAV;
-        } else if (entity.level().dimension() == NorthstarDimensions.MERCURY_DIM_KEY) {
-            PLANET_GRAV = MERCURY_GRAV;
-        } else if (isInOrbit) {
-            PLANET_GRAV = OUTER_MOON_GRAV;
-        } else {
-            PLANET_GRAV = EARTH_GRAV;
-        }
+        double planetGravity = NorthstarPlanets.getLivingGravityMultiplier(entity.level().dimension());
 
         if (entity.isFallFlying() || entity.isInFluidType()) {
-            PLANET_GRAV = EARTH_GRAV;
+            planetGravity = 1;
         }
         if (!entity.isNoGravity() && !entity.isInWater() && !entity.isInLava() && !entity.hasEffect(MobEffects.SLOW_FALLING)) {
             float dust_push = 0;
-            if (entity.level().getRainLevel(0) > 0 && entity.level().getRawBrightness(entity.blockPosition(), -1) == 16 && !entity.isSpectator() && (entity.level().dimension() == NorthstarDimensions.MARS_DIM_KEY && !NorthstarOxygen.hasOxygen(entity.level(), entity.getEyePosition()))
+            if (entity.level().getRainLevel(0) > 0 && entity.level().getRawBrightness(entity.blockPosition(), -1) == 16 && !entity.isSpectator() && (NorthstarPlanets.hasDustStormPush(entity.level()) && !NorthstarOxygen.hasOxygen(entity.level(), entity.getEyePosition()))
                     && entity.level().isInWorldBounds(entity.blockPosition()) && !RocketHandler.isInRocket(entity)) {
                 dust_push = 0.005f;
             }
@@ -83,7 +53,7 @@ public class GravityStuffMixin {
                 }
             }
 
-            double newGrav = CONSTANT * PLANET_GRAV;
+            double newGrav = CONSTANT * planetGravity;
             float crouchPush = 0;
             if (!isInOrbit) {
                 entity.setDeltaMovement(velocity.x() + dust_push, velocity.y() + (CONSTANT - newGrav), velocity.z() - dust_push);
@@ -97,7 +67,7 @@ public class GravityStuffMixin {
         }
         /*if (isInOrbit) {
             if (entity.getY() < 0 && !entity.level().isClientSide) {
-                if (entity.level().dimension() == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
+                if (NorthstarPlanets.isInOrbit(entity.level().dimension())) {
                     ServerLevel destLevel = entity.level().getServer().getLevel(Level.OVERWORLD);
                     if (entity instanceof ServerPlayer player) {
                         changePlayerDimension(destLevel, player);
@@ -115,29 +85,9 @@ public class GravityStuffMixin {
 
         if (!NorthstarPlanets.hasNormalGrav(entity.level().dimension())) {
             MobEffectInstance mobeffectinstance = entity.getEffect(MobEffects.JUMP);
-            double mult = getGravMultiplier(entity.level().dimension());
+            double mult = NorthstarPlanets.getLivingGravityMultiplier(entity.level().dimension());
             float f = (float) (mobeffectinstance == null ? 0.0F : (float) (mobeffectinstance.getAmplifier() + 1) * mult);
             info.setReturnValue(Mth.ceil(((pFallDistance * mult) - 3.0F - f) * pDamageMultiplier));
         }
-    }
-
-    public double getGravMultiplier(ResourceKey<Level> level) {
-        // I love spaghetti
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {
-            return MOON_GRAV;
-        }
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {
-            return MARS_GRAV;
-        }
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {
-            return MERCURY_GRAV;
-        }
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
-            return VENUS_GRAV;
-        }
-        if (level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
-            return OUTER_MOON_GRAV;
-        }
-        return 1;
     }
 }

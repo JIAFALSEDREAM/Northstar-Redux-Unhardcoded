@@ -5,7 +5,6 @@ import com.lightning.northstar.Northstar;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.gui.widget.IconButton;
-import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -57,9 +56,9 @@ public class RocketStationScreen extends AbstractContainerScreen<RocketStationMe
         int x = ((width - (imageWidth + (imageWidth / 2))) / 2);
         int y = (height - (imageHeight + (imageHeight / 2))) / 2;
         if (this.menu.target != null)
-            pPoseStack.drawString(font, Component.literal("Estimated Fuel Cost: " + this.menu.fuelCost + " gJ"), x + imageWidth - 110, y + imageWidth - 100, 0x313a54);
+            pPoseStack.drawString(font, Component.translatable("northstar.gui.rocket_station.estimated_fuel_cost", this.menu.fuelCost), x + imageWidth - 110, y + imageWidth - 100, 0x313a54);
         if (this.menu.target == null)
-            pPoseStack.drawString(font, Component.literal("Invalid Target"), x + imageWidth - 40, y + imageWidth - 100, 0x313a54);
+            pPoseStack.drawString(font, Component.translatable("northstar.gui.rocket_station.invalid_target"), x + imageWidth - 40, y + imageWidth - 100, 0x313a54);
     }
 
     protected void renderButtons(GuiGraphics pPoseStack, int mouseX, int mouseY, float delta) {
@@ -67,7 +66,7 @@ public class RocketStationScreen extends AbstractContainerScreen<RocketStationMe
         int y = (height - (imageHeight + (imageHeight / 2))) / 2;
 
         IconButton assemble = new IconButton(x + imageWidth - 10, y + imageHeight - 79, AllIcons.I_ADD);
-        assemble.setToolTip(CreateLang.translateDirect("station.assemble_train"));
+        assemble.setToolTip(Component.translatable("northstar.gui.rocket_station.assemble"));
         assemble.withCallback(() -> {
             CatnipServices.NETWORK.sendToServer(RocketStationEditPacket.tryAssemble(menu.contentHolder.getBlockPos()));
             removed();

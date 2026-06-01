@@ -35,7 +35,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
@@ -131,10 +130,7 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
         super.tick();
         i++;
         ItemStack item = container.getItem(0);
-        if (item.getItem() == NorthstarItems.STAR_MAP.get() || item.getItem() == NorthstarItems.RETURN_TICKET.get()) {
-            if (item.has(NorthstarDataComponents.PLANET))
-                target = NorthstarPlanets.getPlanetDimension(item.get(NorthstarDataComponents.PLANET));
-        }
+        target = getTargetFromItem(item);
         fuelCost = fuelCalc();
         fuelReturnCost = fuelReturnCalc();
 
@@ -179,6 +175,7 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
             contraption.fuelCost = fuelCost;
             contraption.fuelReturnCost = fuelReturnCost;
             contraption.dest = target;
+            contraption.isUsingTicket = isReturnTicketForTarget(container.getItem(0), target);
             heatCost = (NorthstarTemperature.getHeatRating(target) * (contraption.blockCount)) + NorthstarTemperature.getHeatConstant(target);
             heatCostHome = (NorthstarTemperature.getHeatRating(level.dimension()) * (contraption.blockCount)) + NorthstarTemperature.getHeatConstant(level.dimension());
             if (heatCostHome > heatCost) {
@@ -199,11 +196,9 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
                 movementDirection)) {
 
             if (!this.level.getBlockState(worldPosition.above()).isAir()) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Rocket Stations require at least 1 block of space above them").withStyle(ChatFormatting.RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.blocked_above").withStyle(ChatFormatting.RED), false);
             } else {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Something's blocking your rocket! Make sure everything is glued together!").withStyle(ChatFormatting.RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.blocked").withStyle(ChatFormatting.RED), false);
             }
             return;
         } else {
@@ -225,8 +220,7 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
             }
         }
         if (interplanetaryFlag) {
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Interplanetary travel requires a Interplanetary Navigator!").withStyle(ChatFormatting.RED), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.interplanetary_navigator_required").withStyle(ChatFormatting.RED), false);
         }
         //Assuming we have everything we need to assemble, let's do it
         if (engines >= requiredJets && hasStation && fuelAmount > (fuelCost + contraption.weightCost) && heatShielding >= heatCost && oxygenSealed && !interplanetaryFlag && contraption.hasControls && contraption.dest != null && contraption.dest != this.level.dimension()) {
@@ -244,50 +238,34 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
             RocketHandler.ROCKETS.add(movedContraption);
             level.addFreshEntity(movedContraption);
         } else {
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Full Fuel Cost: " + (contraption.weightCost + contraption.fuelCost)).withStyle(ChatFormatting.GOLD), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Current Fuel Supply: " + (int) contraption.fuelAmount()).withStyle(ChatFormatting.GOLD), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Estimated Return Cost: " + (contraption.weightCost + fuelReturnCost)).withStyle(ChatFormatting.GOLD), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Required Heat Shielding: " + heatCost).withStyle(ChatFormatting.YELLOW), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Current Heat Shielding: " + contraption.heatShielding()).withStyle(ChatFormatting.YELLOW), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Required Engines: " + requiredJets).withStyle(ChatFormatting.BLUE), false);
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Current Engine Count: " + contraption.hasJetEngine()).withStyle(ChatFormatting.BLUE), false);
-            //contraption.owner.displayClientMessage(Component.literal("Oxygen Size: " + oxyCheck.size()).withStyle(ChatFormatting.AQUA), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.full_fuel_cost", contraption.weightCost + contraption.fuelCost).withStyle(ChatFormatting.GOLD), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.current_fuel_supply", (int) contraption.fuelAmount()).withStyle(ChatFormatting.GOLD), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.estimated_return_cost", contraption.weightCost + fuelReturnCost).withStyle(ChatFormatting.GOLD), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.required_heat_shielding", heatCost).withStyle(ChatFormatting.YELLOW), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.current_heat_shielding", contraption.heatShielding()).withStyle(ChatFormatting.YELLOW), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.required_engines", requiredJets).withStyle(ChatFormatting.BLUE), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.current_engine_count", contraption.hasJetEngine()).withStyle(ChatFormatting.BLUE), false);
             if (!oxygenSealed) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Cockpit is not sealed, or too large!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.cockpit_unsealed").withStyle(ChatFormatting.DARK_RED), false);
             }
             if (contraption.fuelAmount() < contraption.fuelCost) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Insufficient fuel!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.insufficient_fuel").withStyle(ChatFormatting.DARK_RED), false);
             }
             if (contraption.heatShielding() < heatCost) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Insufficient heat shielding!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.insufficient_heat_shielding").withStyle(ChatFormatting.DARK_RED), false);
             }
             if (contraption.hasJetEngine() < requiredJets) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Not enough Jet Engines!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.not_enough_jet_engines").withStyle(ChatFormatting.DARK_RED), false);
             }
             if (!contraption.hasControls) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("No controls present!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.no_controls").withStyle(ChatFormatting.DARK_RED), false);
             }
             if (container.getItem(0).isEmpty()) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("No star map or ticket present!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.no_target_item").withStyle(ChatFormatting.DARK_RED), false);
             } else if (contraption.dest == null || contraption.dest == this.level.dimension()) {
-                contraption.owner.displayClientMessage(Component.literal
-                        ("Invalid Target!").withStyle(ChatFormatting.DARK_RED), false);
+                contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.invalid_target").withStyle(ChatFormatting.DARK_RED), false);
             }
-            contraption.owner.displayClientMessage(Component.literal
-                    ("Rocket failed to assemble!").withStyle(ChatFormatting.RED), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.gui.rocket_station.assembly_failed").withStyle(ChatFormatting.RED), false);
             Northstar.LOGGER.debug("No station or jet engine, Bruh!");
             Northstar.LOGGER.debug("Heat Cost: {}     Heat Shielding: {}", heatCost, heatShielding);
             Northstar.LOGGER.debug("Weight Cost: {}      Fuel Cost: {}", contraption.weightCost, fuelCost);
@@ -301,53 +279,29 @@ public class RocketStationBlockEntity extends SmartBlockEntity implements IDispl
     }
 
     public int fuelCalc() {
-        String home = NorthstarPlanets.getPlanetName(this.level.dimension());
-        String targ = NorthstarPlanets.getPlanetName(target);
-
-        int home_x = (int) NorthstarPlanets.getPlanetX(home);
-        int home_y = (int) NorthstarPlanets.getPlanetY(home);
-
-        int targ_x = (int) NorthstarPlanets.getPlanetX(targ);
-        int targ_y = (int) NorthstarPlanets.getPlanetY(targ);
-
-        int dif = (int) (Math.pow(home_x - targ_x, 2) + Math.pow(home_y - targ_y, 2));
-        dif = Mth.roundToward(dif, 100) / 20;
-        int cost = dif + NorthstarPlanets.getPlanetAtmosphereCost(this.level.dimension()) + 1000;
-        return cost * 8;
+        return NorthstarPlanets.getTravelFuelCost(this.level.dimension(), target);
     }
 
     public int fuelReturnCalc() {
-        String home = NorthstarPlanets.getPlanetName(this.level.dimension());
-        String targ = NorthstarPlanets.getPlanetName(target);
-
-        int home_x = (int) NorthstarPlanets.getPlanetX(home);
-        int home_y = (int) NorthstarPlanets.getPlanetY(home);
-
-        int targ_x = (int) NorthstarPlanets.getPlanetX(targ);
-        int targ_y = (int) NorthstarPlanets.getPlanetY(targ);
-
-        int dif = (int) (Math.pow(home_x - targ_x, 2) + Math.pow(home_y - targ_y, 2));
-        dif = Mth.roundToward(dif, 100) / 20;
-        int cost = dif + NorthstarPlanets.getPlanetAtmosphereCost(target) + 1000;
-        return cost * 8;
+        return NorthstarPlanets.getReturnFuelCost(this.level.dimension(), target);
     }
 
     public int engineCalc() {
-        int homeAtmos = NorthstarPlanets.getPlanetAtmosphereCost(level.dimension()) / 100;
-        int targetAtmos = NorthstarPlanets.getPlanetAtmosphereCost(target) / 100;
+        return NorthstarPlanets.getRequiredEngines(level.dimension(), target);
+    }
 
-        double grav = NorthstarPlanets.getGravMultiplier(target);
-        double homeGrav = NorthstarPlanets.getGravMultiplier(level.dimension());
-        if (grav < homeGrav) {
-            grav = homeGrav;
-        }
-        double constant = NorthstarPlanets.getEngineConstant(target);
-        double homeConstant = NorthstarPlanets.getEngineConstant(level.dimension());
-        if (constant < homeConstant) {
-            constant = homeConstant;
-        }
+    private boolean isReturnTicketForTarget(ItemStack item, ResourceKey<Level> target) {
+        return item.is(NorthstarItems.RETURN_TICKET.get())
+                && item.has(NorthstarDataComponents.PLANET)
+                && NorthstarPlanets.isRocketTarget(item.get(NorthstarDataComponents.PLANET), target);
+    }
 
-        return (int) (Mth.clamp(((targetAtmos + homeAtmos) * grav), 6, 64) + constant);
+    private ResourceKey<Level> getTargetFromItem(ItemStack item) {
+        if ((item.is(NorthstarItems.STAR_MAP.get()) || item.is(NorthstarItems.RETURN_TICKET.get()))
+                && item.has(NorthstarDataComponents.PLANET)) {
+            return NorthstarPlanets.getPlanetDimension(item.get(NorthstarDataComponents.PLANET));
+        }
+        return null;
     }
 
     // this is extremely buggy for some reason, this NEEDS to be fixed before release

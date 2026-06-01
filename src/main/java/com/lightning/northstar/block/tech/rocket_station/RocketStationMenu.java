@@ -8,7 +8,6 @@ import com.simibubi.create.foundation.gui.menu.MenuBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -59,27 +58,17 @@ public class RocketStationMenu extends MenuBase<RocketStationBlockEntity> {
     }
 
     public int fuelCalc() {
-        String home = NorthstarPlanets.getPlanetName(contentHolder.getLevel().dimension());
-        String targ = NorthstarPlanets.getPlanetName(target);
-
-        int home_x = (int) NorthstarPlanets.getPlanetX(home);
-        int home_y = (int) NorthstarPlanets.getPlanetY(home);
-
-        int targ_x = (int) NorthstarPlanets.getPlanetX(targ);
-        int targ_y = (int) NorthstarPlanets.getPlanetY(targ);
-
-        int dif = (int) (Math.pow(home_x - targ_x, 2) + Math.pow(home_y - targ_y, 2));
-        dif = Mth.roundToward(dif, 100) / 20;
-        int cost = dif + NorthstarPlanets.getPlanetAtmosphereCost(contentHolder.getLevel().dimension()) + 1000;
-        return cost * 8;
+        return NorthstarPlanets.getTravelFuelCost(contentHolder.getLevel().dimension(), target);
     }
 
     @Override
     public void slotsChanged(Container inventory) {
         ItemStack item = contentHolder.container.getItem(0);
-        if (contentHolder.container.getItem(0).getItem() == NorthstarItems.STAR_MAP.get() || contentHolder.container.getItem(0).getItem() == NorthstarItems.RETURN_TICKET.get()) {
-            if (item.has(NorthstarDataComponents.PLANET))
-                target = NorthstarPlanets.getPlanetDimension(item.get(NorthstarDataComponents.PLANET));
+        if ((item.is(NorthstarItems.STAR_MAP.get()) || item.is(NorthstarItems.RETURN_TICKET.get()))
+                && item.has(NorthstarDataComponents.PLANET)) {
+            target = NorthstarPlanets.getPlanetDimension(item.get(NorthstarDataComponents.PLANET));
+        } else {
+            target = null;
         }
         fuelCost = fuelCalc();
     }

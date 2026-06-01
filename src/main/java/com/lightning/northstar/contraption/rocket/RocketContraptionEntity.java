@@ -348,17 +348,17 @@ public class RocketContraptionEntity extends AbstractContraptionEntity {
         double heatCost = (NorthstarTemperature.getHeatRating(destination) * ((RocketContraption) this.contraption).blockCount) + NorthstarTemperature.getHeatConstant(destination);
         double heatCostHome = (NorthstarTemperature.getHeatRating(level().dimension()) * ((RocketContraption) this.contraption).blockCount) + NorthstarTemperature.getHeatConstant(level().dimension());
         if (heatCostHome > heatCost) heatCost = heatCostHome;
-        int requiredJets = contraption.fuelCost / 800;
+        int requiredJets = NorthstarPlanets.getRequiredEngines(home != null ? home : level().dimension(), destination);
         int fuelCost = (int) (contraption.weightCost + (contraption.fuelCost - (contraption.fuelCost * contraption.computingPower)));
 
-        contraption.owner.displayClientMessage(Component.literal("Fuel: " + (int) contraption.fuelAmount() + "; Required: " + fuelCost).withStyle(ChatFormatting.GOLD), false);
-        contraption.owner.displayClientMessage(Component.literal("Return Fuel Cost: ~" + contraption.fuelReturnCost).withStyle(ChatFormatting.GOLD), false);
-        contraption.owner.displayClientMessage(Component.literal("Heat Shielding: " + contraption.heatShielding() + "; Required: " + (int) Math.ceil(heatCost)).withStyle(ChatFormatting.YELLOW), false);
-        contraption.owner.displayClientMessage(Component.literal("Engine Count: " + contraption.hasJetEngine() + "; Required: " + requiredJets).withStyle(ChatFormatting.BLUE), false);
+        contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.fuel_required", (int) contraption.fuelAmount(), fuelCost).withStyle(ChatFormatting.GOLD), false);
+        contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.return_fuel_cost", contraption.fuelReturnCost).withStyle(ChatFormatting.GOLD), false);
+        contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.heat_shielding_required", contraption.heatShielding(), (int) Math.ceil(heatCost)).withStyle(ChatFormatting.YELLOW), false);
+        contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.engine_count_required", contraption.hasJetEngine(), requiredJets).withStyle(ChatFormatting.BLUE), false);
         if (auto_land_mode) {
-            contraption.owner.displayClientMessage(Component.literal("Auto Landing Mode Enabled!").withStyle(ChatFormatting.GREEN), false);
+            contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.auto_landing_enabled").withStyle(ChatFormatting.GREEN), false);
         }
-        contraption.owner.displayClientMessage(Component.literal("All players should remain seated for the duration of the flight!").withStyle(ChatFormatting.AQUA), false);
+        contraption.owner.displayClientMessage(Component.translatable("northstar.contraption.rocket.remain_seated").withStyle(ChatFormatting.AQUA), false);
     }
 
     @Override

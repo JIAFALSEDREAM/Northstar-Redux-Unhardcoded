@@ -25,7 +25,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/WalkAnimationState;speed(F)F"))
     private float changeWalkAnimationSpeed(WalkAnimationState instance, float partialTick, @Local(argsOnly = true) T entity) {
         float gravityMultiplier = entity.onGround() ? 1 :
-                Mth.clamp((float) NorthstarPlanets.getGravMultiplier(entity.level().dimension()), 0.25f, 1f);
+                Mth.clamp((float) NorthstarPlanets.getLivingGravityMultiplier(entity.level().dimension()), 0.25f, 1f);
 
         if (!entity.onGround() && gravityMultiplier < 0.7 && entity.isInWater() && !entity.isVisuallySwimming() && !entity.isFallFlying()) {
             gravityMultiplier *= 1.2f;

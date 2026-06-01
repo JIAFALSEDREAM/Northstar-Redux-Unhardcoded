@@ -6,11 +6,9 @@ import com.lightning.northstar.block.tech.rocket_station.RocketStationBlockEntit
 import com.lightning.northstar.compat.copycats.CopycatsPlusHelper;
 import com.lightning.northstar.content.NorthstarBlocks;
 import com.lightning.northstar.content.NorthstarContraptionTypes;
-import com.lightning.northstar.content.NorthstarDataComponents;
 import com.lightning.northstar.content.NorthstarItems;
 import com.lightning.northstar.content.NorthstarTags.NorthstarBlockTags;
 import com.lightning.northstar.contraption.FuelType;
-import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.api.contraption.ContraptionType;
 import com.simibubi.create.content.contraptions.AssemblyException;
@@ -102,18 +100,6 @@ public class RocketContraption extends TranslatingContraption {
             rocket_station = true;
             if (blockEntity instanceof RocketStationBlockEntity rsbe) {
                 name = rsbe.name;
-
-                // this is a bit sketchy in game, it should delete the ticket after it's
-                // actually been used, not when assembling the rocket
-                // though I can't figure that out so this may have to do
-
-                if (rsbe.container.getItem(0).is(NorthstarItems.RETURN_TICKET.get())) {
-                    if (rsbe.container.getItem(0).has(NorthstarDataComponents.PLANET)) {
-                        if (NorthstarPlanets.getPlanetDimension(rsbe.container.getItem(0).get(NorthstarDataComponents.PLANET)) == dest)
-                            this.isUsingTicket = true;
-                        this.isUsingTicket = true;
-                    }
-                }
             }
         }
         if (blockState.is(NorthstarBlocks.AUTO_LANDER.get())) {

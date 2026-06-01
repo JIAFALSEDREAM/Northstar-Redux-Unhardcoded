@@ -1,8 +1,8 @@
 package com.lightning.northstar.block.tech.telescope;
 
-import com.google.common.collect.Lists;
 import com.lightning.northstar.Northstar;
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
+import com.lightning.northstar.api.planet.PlanetDefinition;
+import com.lightning.northstar.api.planet.PlanetRegistry;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -14,7 +14,6 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
@@ -34,19 +34,6 @@ public class TelescopeScreen extends AbstractSimiContainerScreen<TelescopeMenu> 
 
     private static final ResourceLocation TELESCOPE_TEXTURE = Northstar.asResource("textures/gui/telescope_gui.png");
     private static final ResourceLocation TELESCOPE_TEXTURE_SIDE = Northstar.asResource("textures/gui/telescope_gui_side.png");
-    private static final ResourceLocation MERCURY = Northstar.asResource("textures/environment/mercury_far.png");
-    private static final ResourceLocation VENUS = Northstar.asResource("textures/environment/venus_far.png");
-    private static final ResourceLocation EARTH = Northstar.asResource("textures/environment/earth_far.png");
-    private static final ResourceLocation MOON = Northstar.asResource("textures/environment/moon_far.png");
-    private static final ResourceLocation MARS = Northstar.asResource("textures/environment/mars_far.png");
-    private static final ResourceLocation PHOBOS_DEIMOS = Northstar.asResource("textures/environment/phobos_and_deimos_far.png");
-    private static final ResourceLocation CERES = Northstar.asResource("textures/environment/ceres_far.png");
-    private static final ResourceLocation JUPITER = Northstar.asResource("textures/environment/jupiter_far.png");
-    private static final ResourceLocation SATURN = Northstar.asResource("textures/environment/saturn_far.png");
-    private static final ResourceLocation URANUS = Northstar.asResource("textures/environment/uranus_far.png");
-    private static final ResourceLocation NEPTUNE = Northstar.asResource("textures/environment/neptune_far.png");
-    private static final ResourceLocation PLUTO = Northstar.asResource("textures/environment/pluto_far.png");
-    private static final ResourceLocation ERIS = Northstar.asResource("textures/environment/eris_far.png");
     private static final ResourceLocation BACKGROUND = Northstar.asResource("textures/environment/space_background.png");
     private static final ResourceLocation MOON_GLOW = ResourceLocation.parse("textures/environment/moon_phases.png");
     private static final ResourceLocation MOON_FLAT = Northstar.asResource("textures/environment/moon_flat.png");
@@ -118,116 +105,51 @@ public class TelescopeScreen extends AbstractSimiContainerScreen<TelescopeMenu> 
         PoseStack pose = graphics.pose();
 
         ResourceKey<Level> player_dim = Minecraft.getInstance().player.level().dimension();
-        if (player_dim != NorthstarDimensions.MARS_DIM_KEY) {
-            int mars_x = (int) NorthstarPlanets.mars_x;
-            int mars_y = (int) NorthstarPlanets.mars_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(MARS, (mars_x * 20) + (int) scrollX * 20, (mars_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-            pose.popPose();
+        for (PlanetDefinition planet : PlanetRegistry.all()) {
+            if (!shouldRenderPlanet(planet, player_dim)) {
+                continue;
+            }
+            if (planet.telescopeMoonPhase()) {
+                renderMoonPhasePlanet(graphics, pose, planet);
+            } else {
+                renderPlanetSprite(graphics, pose, planet);
+            }
+        }
+    }
 
-            int pd_x = (int) NorthstarPlanets.pd_x;
-            int pd_y = (int) NorthstarPlanets.pd_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(PHOBOS_DEIMOS, (pd_x * 20) + (int) scrollX * 20, (pd_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-            pose.popPose();
+    private void renderPlanetSprite(GuiGraphics graphics, PoseStack pose, PlanetDefinition planet) {
+        ResourceLocation texture = getPlanetSprite(planet.id());
+        if (texture == null) {
+            return;
         }
 
-        if (player_dim != NorthstarDimensions.VENUS_DIM_KEY) {
-            int venus_x = (int) NorthstarPlanets.venus_x;
-            int venus_y = (int) NorthstarPlanets.venus_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(VENUS, ((venus_x * 20) + (int) scrollX * 20), ((venus_y * 20) + (int) scrollY * 20), 0, 0, 255, 255);
-            pose.popPose();
-        }
-
-        if (player_dim != NorthstarDimensions.MERCURY_DIM_KEY) {
-            int mercury_x = (int) NorthstarPlanets.mercury_x;
-            int mercury_y = (int) NorthstarPlanets.mercury_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(MERCURY, (mercury_x * 20) + (int) scrollX * 20, (mercury_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-            pose.popPose();
-        }
-
-        int jupiter_x = (int) NorthstarPlanets.jupiter_x;
-        int jupiter_y = (int) NorthstarPlanets.jupiter_y;
+        int planetX = (int) NorthstarPlanets.getPlanetX(planet.id());
+        int planetY = (int) NorthstarPlanets.getPlanetY(planet.id());
         pose.pushPose();
         pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(JUPITER, (jupiter_x * 20) + (int) scrollX * 20, (jupiter_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
+        graphics.blit(texture, (planetX * 20) + (int) scrollX * 20, (planetY * 20) + (int) scrollY * 20, 0, 0, 255, 255);
         pose.popPose();
+    }
 
-        int saturn_x = (int) NorthstarPlanets.saturn_x;
-        int saturn_y = (int) NorthstarPlanets.saturn_y;
+    private void renderMoonPhasePlanet(GuiGraphics graphics, PoseStack pose, PlanetDefinition planet) {
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         pose.pushPose();
-        pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(SATURN, (saturn_x * 20) + (int) scrollX * 20, (saturn_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
+        pose.scale(2F, 1F, 1F);
+        int moonPhase = Minecraft.getInstance().level.getMoonPhase();
+        int moonUvX = (moonPhase % 4) * 64;
+        int moonUvY = (moonPhase / 4) * 128;
+        int x = ((int) NorthstarPlanets.getPlanetX(planet.id()) + (int) scrollX / 2) - 27;
+        int y = ((int) NorthstarPlanets.getPlanetY(planet.id()) + (int) scrollY) - 57;
+        graphics.blit(MOON_GLOW, x, y, moonUvX, moonUvY, 64, 128);
         pose.popPose();
 
-        int uranus_x = (int) NorthstarPlanets.uranus_x;
-        int uranus_y = (int) NorthstarPlanets.uranus_y;
         pose.pushPose();
-        pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(URANUS, (uranus_x * 20) + (int) scrollX * 20, (uranus_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
+        RenderSystem.disableBlend();
+        pose.scale(2F, 1F, 1F);
+        graphics.blit(MOON_FLAT, x, y, moonUvX, moonUvY, 64, 128);
         pose.popPose();
-
-        int neptune_x = (int) NorthstarPlanets.neptune_x;
-        int neptune_y = (int) NorthstarPlanets.neptune_y;
-        pose.pushPose();
-        pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(NEPTUNE, (neptune_x * 20) + (int) scrollX * 20, (neptune_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-        pose.popPose();
-
-        int pluto_x = (int) NorthstarPlanets.pluto_x;
-        int pluto_y = (int) NorthstarPlanets.pluto_x;
-        pose.pushPose();
-        pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(PLUTO, (pluto_x * 20) + (int) scrollX * 20, (pluto_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-        pose.popPose();
-
-        int eris_x = (int) NorthstarPlanets.eris_x;
-        int eris_y = (int) NorthstarPlanets.eris_y;
-        pose.pushPose();
-        pose.scale(0.05F, 0.05F, 0.05F);
-        graphics.blit(ERIS, (eris_x * 20) + (int) scrollX * 20, (eris_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-        pose.popPose();
-
-        if (player_dim != ClientLevel.OVERWORLD && player_dim != NorthstarDimensions.MOON_DIM_KEY) {
-            int earth_x = (int) NorthstarPlanets.earth_x;
-            int earth_y = (int) NorthstarPlanets.earth_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(EARTH, (earth_x * 20) + (int) scrollX * 20, (earth_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-            pose.popPose();
-            int moon_x = (int) NorthstarPlanets.moon_x;
-            int moon_y = (int) NorthstarPlanets.moon_y;
-            pose.pushPose();
-            pose.scale(0.05F, 0.05F, 0.05F);
-            graphics.blit(MOON, (moon_x * 20) + (int) scrollX * 20, (moon_y * 20) + (int) scrollY * 20, 0, 0, 255, 255);
-            pose.popPose();
-        }
-
-
-        if (player_dim == ClientLevel.OVERWORLD) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-            pose.pushPose();
-            pose.scale(2F, 1F, 1F);
-            int moon_phase = Minecraft.getInstance().level.getMoonPhase();
-            int moon_uv_x = (moon_phase % 4) * 64;
-            int moon_uv_y = (moon_phase / 4) * 128;
-            graphics.blit(MOON_GLOW, ((int) NorthstarPlanets.earth_moon_x + (int) scrollX / 2) - 27, ((int) NorthstarPlanets.earth_moon_y + (int) scrollY) - 57, 0 + moon_uv_x, 0 + moon_uv_y, 64, 128);
-            pose.popPose();
-
-            pose.pushPose();
-            RenderSystem.disableBlend();
-            pose.scale(2F, 1F, 1F);
-            graphics.blit(MOON_FLAT, ((int) NorthstarPlanets.earth_moon_x + (int) scrollX / 2) - 27, ((int) NorthstarPlanets.earth_moon_y + (int) scrollY) - 57, 0 + moon_uv_x, 0 + moon_uv_y, 64, 128);
-            pose.popPose();
-        }
     }
 
     public boolean paperCheck() {
@@ -256,184 +178,20 @@ public class TelescopeScreen extends AbstractSimiContainerScreen<TelescopeMenu> 
 
             graphics.blit(getPlanetSprite(selectedPlanet), x - 40, y + 93, 0, 0, 35, 35, 35, 35);
             graphics.drawString(font, getPlanetName(selectedPlanet), x - 45, y + 130, 6944, false);
-            graphics.drawString(font, "X: " + (int) NorthstarPlanets.getPlanetX(selectedPlanet), x - 45, y + 140, 6944, false);
-            graphics.drawString(font, "Y: " + (int) NorthstarPlanets.getPlanetY(selectedPlanet), x - 45, y + 150, 6944, false);
+            graphics.drawString(font, Component.translatable("northstar.gui.telescope.coordinate_x", (int) NorthstarPlanets.getPlanetX(selectedPlanet)), x - 45, y + 140, 6944, false);
+            graphics.drawString(font, Component.translatable("northstar.gui.telescope.coordinate_y", (int) NorthstarPlanets.getPlanetY(selectedPlanet)), x - 45, y + 150, 6944, false);
         }
     }
 
     public void renderPlanetTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
-        int x = ((width - (imageWidth + (imageWidth / 2))) / 2);
-        int y = (height - (imageHeight + (imageHeight / 2))) / 2;
-
         ResourceKey<Level> player_dim = Minecraft.getInstance().player.level().dimension();
-        if ((Math.abs(NorthstarPlanets.mars_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.mars_y + scrollY + 8 - mouseY) < 8) && player_dim != NorthstarDimensions.MARS_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
+        for (PlanetDefinition planet : PlanetRegistry.all()) {
+            if (!shouldRenderPlanet(planet, player_dim) || !isMouseOverPlanet(planet, mouseX, mouseY)) {
+                continue;
+            }
             RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.mars.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.mars.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mars.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mars.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mars.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.mars_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.mars_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs(NorthstarPlanets.earth_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.earth_y + scrollY + 8 - mouseY) < 8) && player_dim != ClientLevel.OVERWORLD) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.earth.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.earth.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.earth.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.earth.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.earth.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.earth_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.earth_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs(NorthstarPlanets.moon_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.moon_y + scrollY + 8 - mouseY) < 8) && player_dim != ClientLevel.OVERWORLD && player_dim != NorthstarDimensions.MOON_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.moon.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.moon.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.moon_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.moon_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs((NorthstarPlanets.pd_x) + scrollX + 5 - mouseX) < 5 && Math.abs((NorthstarPlanets.pd_y) + scrollY + 5 - mouseY) < 5) && player_dim != NorthstarDimensions.MARS_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.phobos_deimos.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.phobos_deimos.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.phobos_deimos.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.phobos_deimos.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.phobos_deimos.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.pd_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.pd_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs((NorthstarPlanets.venus_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.venus_y) + scrollY + 8 - mouseY) < 8) && player_dim != NorthstarDimensions.VENUS_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.venus.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.venus.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.venus.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.venus.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.venus.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.venus_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.venus_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs(NorthstarPlanets.mercury_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.mercury_y + scrollY + 7 - mouseY) < 8) && player_dim != NorthstarDimensions.MERCURY_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.mercury.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.mercury.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mercury.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mercury.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.mercury.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.mercury_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.mercury_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs(NorthstarPlanets.earth_moon_x + scrollX - mouseX) < 24 && Math.abs(NorthstarPlanets.earth_moon_y + scrollY - mouseY) < 24) && player_dim == ClientLevel.OVERWORLD && player_dim != NorthstarDimensions.MOON_DIM_KEY) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.moon.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.moon.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.moon.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.earth_moon_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.earth_moon_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if ((Math.abs(NorthstarPlanets.ceres_x + scrollX + 6 - mouseX) < 6 && Math.abs(NorthstarPlanets.ceres_y + scrollY + 6 - mouseY) < 6)) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.ceres.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.ceres.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.ceres.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.ceres.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.ceres.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.ceres_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.ceres_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.jupiter_x) + scrollX + 12 - mouseX) < 12 && Math.abs((NorthstarPlanets.jupiter_y) + scrollY + 12 - mouseY) < 12) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.jupiter.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.jupiter.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.jupiter.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.jupiter.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.jupiter.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.jupiter_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.jupiter_x).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.saturn_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.saturn_y) + scrollY + 8 - mouseY) < 8) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.saturn.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.saturn.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.saturn.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.saturn.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.saturn.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.saturn_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.saturn_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.uranus_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.uranus_y) + scrollY + 8 - mouseY) < 8) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.uranus.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.uranus.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.uranus.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.uranus.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.uranus.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.uranus_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.uranus_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.neptune_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.neptune_y) + scrollY + 8 - mouseY) < 8) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.neptune.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.neptune.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.neptune.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.neptune.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.neptune.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.neptune_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.neptune_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.pluto_x) + scrollX + 6 - mouseX) < 6 && Math.abs((NorthstarPlanets.pluto_y) + scrollY + 6 - mouseY) < 6) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.pluto.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.pluto.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.pluto.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.pluto.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.pluto.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.pluto_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.pluto_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
-        } else if (Math.abs((NorthstarPlanets.eris_x) + scrollX + 6 - mouseX) < 6 && Math.abs((NorthstarPlanets.eris_y) + scrollY + 6 - mouseY) < 6) {
-            List<Component> list = Lists.newArrayList();
-            RenderSystem.colorMask(true, true, true, true);
-            list.add((Component.translatable("planets.eris.name").withStyle(ChatFormatting.AQUA)));
-            list.add((Component.translatable("planets.eris.type").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.eris.grav").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.eris.temp").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.translatable("planets.eris.atmosphere").withStyle(ChatFormatting.GRAY)));
-            list.add((Component.literal("X:  " + (int) NorthstarPlanets.eris_x).withStyle(ChatFormatting.WHITE)));
-            list.add((Component.literal("Y:  " + (int) NorthstarPlanets.eris_y).withStyle(ChatFormatting.WHITE)));
-
-            graphics.renderComponentTooltip(font, list, mouseX, mouseY);
+            graphics.renderComponentTooltip(font, createPlanetTooltip(planet), mouseX, mouseY);
+            return;
         }
     }
 
@@ -454,44 +212,12 @@ public class TelescopeScreen extends AbstractSimiContainerScreen<TelescopeMenu> 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int pButton) {
         if (pButton == 0 || pButton == 1) {
-            if (Math.abs(NorthstarPlanets.mercury_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.mercury_y + scrollY + 7 - mouseY) < 8 && Minecraft.getInstance().level.dimension() != NorthstarDimensions.MERCURY_DIM_KEY) {
-                selectedPlanet = "mercury";
-            }
-            if (Math.abs((NorthstarPlanets.venus_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.venus_y) + scrollY + 8 - mouseY) < 8 && Minecraft.getInstance().level.dimension() != NorthstarDimensions.VENUS_DIM_KEY) {
-                selectedPlanet = "venus";
-            }
-            if (Math.abs(NorthstarPlanets.earth_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.earth_y + scrollY + 8 - mouseY) < 8 && Minecraft.getInstance().level.dimension() != Level.OVERWORLD) {
-                selectedPlanet = "earth";
-            }
-            if ((Math.abs(NorthstarPlanets.earth_moon_x + scrollX - mouseX) < 18 && Math.abs(NorthstarPlanets.earth_moon_y + scrollY - mouseY) < 18) && Minecraft.getInstance().level.dimension() == Level.OVERWORLD && Minecraft.getInstance().level.dimension() != NorthstarDimensions.MOON_DIM_KEY) {
-                selectedPlanet = "earth_moon";
-            }
-            if (Math.abs(NorthstarPlanets.moon_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.moon_y + scrollY + 8 - mouseY) < 8 && Minecraft.getInstance().level.dimension() != Level.OVERWORLD && Minecraft.getInstance().level.dimension() != NorthstarDimensions.MOON_DIM_KEY) {
-                selectedPlanet = "moon";
-            }
-            if (Math.abs(NorthstarPlanets.mars_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.mars_y + scrollY + 8 - mouseY) < 8 && Minecraft.getInstance().level.dimension() != NorthstarDimensions.MARS_DIM_KEY) {
-                selectedPlanet = "mars";
-            }
-            if (Math.abs(NorthstarPlanets.ceres_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.ceres_y + scrollY + 8 - mouseY) < 8) {
-                selectedPlanet = "ceres";
-            }
-            if (Math.abs(NorthstarPlanets.jupiter_x + scrollX + 8 - mouseX) < 8 && Math.abs(NorthstarPlanets.jupiter_y + scrollY + 8 - mouseY) < 8) {
-                selectedPlanet = "jupiter";
-            }
-            if (Math.abs((NorthstarPlanets.saturn_x) + scrollX + 8 - mouseX) < 8 && Math.abs((NorthstarPlanets.saturn_y) + scrollY + 8 - mouseY) < 8) {
-                selectedPlanet = "saturn";
-            }
-            if (Math.abs(NorthstarPlanets.uranus_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.uranus_y + scrollY + 7 - mouseY) < 8) {
-                selectedPlanet = "uranus";
-            }
-            if (Math.abs(NorthstarPlanets.neptune_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.neptune_y + scrollY + 7 - mouseY) < 8) {
-                selectedPlanet = "neptune";
-            }
-            if (Math.abs(NorthstarPlanets.pluto_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.pluto_y + scrollY + 7 - mouseY) < 8) {
-                selectedPlanet = "pluto";
-            }
-            if (Math.abs(NorthstarPlanets.eris_x + scrollX + 7 - mouseX) < 8 && Math.abs(NorthstarPlanets.eris_y + scrollY + 7 - mouseY) < 8) {
-                selectedPlanet = "eris";
+            ResourceKey<Level> playerDim = Minecraft.getInstance().level.dimension();
+            for (PlanetDefinition planet : PlanetRegistry.all()) {
+                if (shouldRenderPlanet(planet, playerDim) && isMouseOverPlanet(planet, mouseX, mouseY)) {
+                    selectedPlanet = planet.id();
+                    break;
+                }
             }
         }
 
@@ -506,26 +232,55 @@ public class TelescopeScreen extends AbstractSimiContainerScreen<TelescopeMenu> 
 
 
     public ResourceLocation getPlanetSprite(String planet) {
-        return switch (planet) {
-            case "mercury" -> MERCURY;
-            case "venus" -> VENUS;
-            case "earth" -> EARTH;
-            case "earth_moon", "moon" -> MOON;
-            case "mars" -> MARS;
-            case "ceres" -> CERES;
-            case "jupiter" -> JUPITER;
-            case "saturn" -> SATURN;
-            case "uranus" -> URANUS;
-            case "neptune" -> NEPTUNE;
-            case "pluto" -> PLUTO;
-            case "eris" -> ERIS;
-            default -> null;
-        };
+        return PlanetRegistry.byId(planet)
+                .map(PlanetDefinition::telescopeTexture)
+                .orElse(null);
 
     }
 
     public Component getPlanetName(String planet) {
         return Component.translatable("planets." + planet + ".name");
+    }
+
+    private boolean shouldRenderPlanet(PlanetDefinition planet, ResourceKey<Level> playerDimension) {
+        if (!planet.observable() || planet.telescopeTexture() == null) {
+            return false;
+        }
+        if (!planet.telescopeVisibleOnlyDimensions().isEmpty()
+                && !planet.telescopeVisibleOnlyDimensions().contains(playerDimension)) {
+            return false;
+        }
+        if (planet.telescopeHiddenDimensions().contains(playerDimension)) {
+            return false;
+        }
+        if (planet.dimension() != null && planet.dimension() == playerDimension) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isMouseOverPlanet(PlanetDefinition planet, double mouseX, double mouseY) {
+        double planetX = NorthstarPlanets.getPlanetX(planet.id());
+        double planetY = NorthstarPlanets.getPlanetY(planet.id());
+        int radius = planet.telescopeHitRadius();
+        int offset = planet.telescopeHitOffset();
+        return Math.abs(planetX + scrollX + offset - mouseX) < radius
+                && Math.abs(planetY + scrollY + offset - mouseY) < radius;
+    }
+
+    private List<Component> createPlanetTooltip(PlanetDefinition planet) {
+        String tooltipId = planet.telescopeTooltipId() == null ? planet.id() : planet.telescopeTooltipId();
+        int x = (int) NorthstarPlanets.getPlanetX(planet.id());
+        int y = (int) NorthstarPlanets.getPlanetY(planet.id());
+        List<Component> list = new ArrayList<>();
+        list.add(Component.translatable("planets." + tooltipId + ".name").withStyle(ChatFormatting.AQUA));
+        list.add(Component.translatable("planets." + tooltipId + ".type").withStyle(ChatFormatting.GRAY));
+        list.add(Component.translatable("planets." + tooltipId + ".grav").withStyle(ChatFormatting.GRAY));
+        list.add(Component.translatable("planets." + tooltipId + ".temp").withStyle(ChatFormatting.GRAY));
+        list.add(Component.translatable("planets." + tooltipId + ".atmosphere").withStyle(ChatFormatting.GRAY));
+        list.add(Component.translatable("northstar.gui.telescope.coordinate_x", x).withStyle(ChatFormatting.WHITE));
+        list.add(Component.translatable("northstar.gui.telescope.coordinate_y", y).withStyle(ChatFormatting.WHITE));
+        return list;
     }
 
 }

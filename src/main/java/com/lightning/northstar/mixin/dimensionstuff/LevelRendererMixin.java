@@ -2,9 +2,10 @@ package com.lightning.northstar.mixin.dimensionstuff;
 
 
 import com.lightning.northstar.Northstar;
+import com.lightning.northstar.api.planet.SkyProfile;
 import com.lightning.northstar.content.NorthstarSounds;
 import com.lightning.northstar.particle.NorthstarParticles;
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
+import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -119,7 +120,7 @@ public abstract class LevelRendererMixin {
 
 //	@Inject(method = "renderLevel", at = @At("HEAD"), cancellable = true)
 //	public void renderLevel(PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo info) {
-//		 if(this.level.dimension() == NorthstarDimensions.VENUS_DIM_KEY)
+//		 if(this.level.dimension() uses the Venus sky profile)
 //		 {RenderSystem.setupLevelDiffuseLighting(VENUS_DIFFUSE_1, VENUS_DIFFUSE_2, pPoseStack.last().pose());}
 //	}
 
@@ -134,7 +135,8 @@ public abstract class LevelRendererMixin {
             }
         }
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
-        if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
+        if (skyProfile == SkyProfile.MARS_LIKE) {
             info.cancel();
 //		Minecraft.getInstance().level.setRainLevel(15);
             float rain_det = this.minecraft.level.getRainLevel(partialTick);
@@ -286,7 +288,7 @@ public abstract class LevelRendererMixin {
 
 
         }
-        if (player_dim == NorthstarDimensions.VENUS_DIM_KEY) {
+        if (skyProfile == SkyProfile.VENUS_LIKE) {
             info.cancel();
 //		Minecraft.getInstance().level.setRainLevel(2);
             float rain_det = this.minecraft.level.getRainLevel(partialTick);
@@ -397,8 +399,9 @@ public abstract class LevelRendererMixin {
             }
         }
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
 
-        if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
+        if (skyProfile == SkyProfile.MARS_LIKE) {
             info.cancel();
             float rain_det = this.minecraft.level.getRainLevel(3);
             if (level.random.nextInt(2) == 0 && level.isDay()) {
@@ -454,7 +457,7 @@ public abstract class LevelRendererMixin {
                 }
             }
         }
-        if (player_dim == NorthstarDimensions.VENUS_DIM_KEY) {
+        if (skyProfile == SkyProfile.VENUS_LIKE) {
             info.cancel();
             float rain_det = this.minecraft.level.getRainLevel(3);
             if (!(rain_det <= 0.0F)) {
@@ -621,11 +624,12 @@ public abstract class LevelRendererMixin {
     @Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
     private void renderSky(Matrix4f frustumMatrix, Matrix4f pProjectionMatrix, float pPartialTick, Camera camera, boolean isFoggy, Runnable runnable, CallbackInfo info) {
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
         PoseStack pPoseStack = new PoseStack();
         pPoseStack.mulPose(frustumMatrix);
         if (this.minecraft != null) {
             float rain_det = 0;
-            if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
+            if (skyProfile == SkyProfile.MARS_LIKE) {
                 info.cancel();
                 runnable.run();
                 BufferBuilder bufferbuilder = null;
@@ -1024,7 +1028,7 @@ public abstract class LevelRendererMixin {
 
 
             }
-            if (player_dim == NorthstarDimensions.VENUS_DIM_KEY) {
+            if (skyProfile == SkyProfile.VENUS_LIKE) {
                 info.cancel();
                 runnable.run();
                 BufferBuilder bufferbuilder = null;
@@ -1233,7 +1237,7 @@ public abstract class LevelRendererMixin {
                 RenderSystem.enableBlend();
                 pPoseStack.popPose();
             }
-            if (player_dim == NorthstarDimensions.MOON_DIM_KEY) {
+            if (skyProfile == SkyProfile.MOON_LIKE) {
                 float playerEyeLevel = (float) this.minecraft.player.getEyePosition(pPartialTick).y;
                 info.cancel();
                 runnable.run();
@@ -1422,7 +1426,7 @@ public abstract class LevelRendererMixin {
                 }
                 RenderSystem.setShaderColor(1, 1, 1, 1);
             }
-            if (player_dim == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
+            if (skyProfile == SkyProfile.SPACE) {
                 float playerEyeLevel = (float) this.minecraft.player.getEyePosition(pPartialTick).y;
                 info.cancel();
                 runnable.run();
@@ -1541,7 +1545,7 @@ public abstract class LevelRendererMixin {
                 RenderSystem.depthMask(true);
                 RenderSystem.depthMask(true);
             }
-            if (player_dim == NorthstarDimensions.MERCURY_DIM_KEY) {
+            if (skyProfile == SkyProfile.MERCURY_LIKE) {
                 float playerEyeLevel = (float) this.minecraft.player.getEyePosition(pPartialTick).y;
                 info.cancel();
                 runnable.run();
@@ -1758,23 +1762,16 @@ public abstract class LevelRendererMixin {
     @Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
     public void renderClouds(PoseStack poseStack, Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, double camX, double camY, double camZ, CallbackInfo info) {
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
         if (this.minecraft != null) {
             float playerEyeLevel = (float) this.minecraft.player.getEyePosition(partialTick).y;
-            if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
-                info.cancel();
-            }
-            if (player_dim == NorthstarDimensions.MOON_DIM_KEY) {
-                info.cancel();
-            }
-            if (player_dim == NorthstarDimensions.MERCURY_DIM_KEY) {
-                info.cancel();
-            }
-            if (player_dim == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
+            if (skyProfile == SkyProfile.MARS_LIKE || skyProfile == SkyProfile.MOON_LIKE
+                    || skyProfile == SkyProfile.MERCURY_LIKE || skyProfile == SkyProfile.SPACE) {
                 info.cancel();
             }
             if (player_dim == Level.OVERWORLD && playerEyeLevel > 500) {
                 info.cancel();
-            } else if (player_dim == NorthstarDimensions.VENUS_DIM_KEY && playerEyeLevel > 500) {
+            } else if (skyProfile == SkyProfile.VENUS_LIKE && playerEyeLevel > 500) {
                 info.cancel();
             }
         }

@@ -6,8 +6,9 @@ import com.lightning.northstar.config.NorthstarConfigs;
 import com.lightning.northstar.content.NorthstarFluids;
 import com.lightning.northstar.content.NorthstarTags.NorthstarEntityTags;
 import com.lightning.northstar.content.NorthstarTags.NorthstarItemTags;
+import com.lightning.northstar.api.planet.PlanetDefinition;
+import com.lightning.northstar.api.planet.PlanetRegistry;
 import com.lightning.northstar.world.SealingProvider;
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.lightning.northstar.world.sealer.ProgressiveBlockUpdater;
 import com.lightning.northstar.world.sealer.SealingMode;
@@ -120,11 +121,7 @@ public class NorthstarTemperature {
     }
 
     public static float getBaseTemperature(Level level, BlockPos pos) {
-        if (level.dimension() == NorthstarDimensions.MERCURY_DIM_KEY) {
-            return level.canSeeSky(pos) && !level.isNight() ? 434 : -200;
-        }
-
-        return NorthstarPlanets.getPlanetTemp(level.dimension());
+        return NorthstarPlanets.getBaseTemperature(level, pos);
     }
 
     @ApiStatus.Internal
@@ -220,23 +217,15 @@ public class NorthstarTemperature {
     }
 
     public static double getHeatRating(ResourceKey<Level> level) {
-        // I love spaghetti (2)
-        if (level == NorthstarDimensions.MOON_DIM_KEY) return 0;
-        if (level == NorthstarDimensions.MARS_DIM_KEY) return 0.05;
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) return 0;
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) return 5;
-        if (level == Level.OVERWORLD) return 0.4;
-        return 1;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::heatRating)
+                .orElse(1.0);
     }
 
     public static double getHeatConstant(ResourceKey<Level> level) {
-        // I love spaghetti (2)
-        if (level == NorthstarDimensions.MOON_DIM_KEY) return 0;
-        if (level == NorthstarDimensions.MARS_DIM_KEY) return 50;
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) return 0;
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) return 1000;
-        if (level == Level.OVERWORLD) return 100;
-        return 1;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::heatConstant)
+                .orElse(1.0);
     }
 
     public static void evaporate(Level level, BlockPos pos) {

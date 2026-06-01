@@ -3,7 +3,7 @@ package com.lightning.northstar.block.tech.atmospheric_concentrator;
 import com.lightning.northstar.content.NorthstarBlockEntityTypes;
 import com.lightning.northstar.content.NorthstarFluids;
 import com.lightning.northstar.util.NorthstarLang;
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
+import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
@@ -64,11 +64,11 @@ public class AtmosphericConcentratorBlockEntity extends KineticBlockEntity imple
 
     public Fluid getCollectedFluid() {
         ResourceKey<Level> dimension = level.dimension();
-        if (dimension.equals(Level.OVERWORLD))
+        if (!NorthstarPlanets.hasAtmosphere(dimension))
+            return Fluids.EMPTY;
+        if (NorthstarPlanets.getPlanetOxy(dimension))
             return NorthstarFluids.OXYGEN.getSource();
-        if (dimension.equals(NorthstarDimensions.MARS_DIM_KEY) || dimension.equals(NorthstarDimensions.VENUS_DIM_KEY))
-            return NorthstarFluids.CARBON.getSource();
-        return Fluids.EMPTY;
+        return NorthstarFluids.CARBON.getSource();
     }
 
     public float getCollectionSpeed() {

@@ -1,6 +1,8 @@
 package com.lightning.northstar.content;
 
 import com.lightning.northstar.Northstar;
+import com.lightning.northstar.api.planet.PlanetDefinition;
+import com.lightning.northstar.api.planet.PlanetRegistry;
 import com.lightning.northstar.world.oxygen.NorthstarOxygen;
 import com.simibubi.create.AllCreativeModeTabs;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
@@ -10,15 +12,19 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static com.lightning.northstar.Northstar.REGISTRATE;
@@ -51,13 +57,7 @@ public class NorthstarCreativeModeTab {
     private static CreativeModeTab.DisplayItemsGenerator createItemDisplay(DeferredHolder<CreativeModeTab, CreativeModeTab> tab) {
         return (parameters, output) -> {
             Map<Item, Consumer<CreativeModeTab.Output>> builders = Map.of(
-                    NorthstarItems.STAR_MAP.get(), out -> {
-                        registerStarMap(out, "earth");
-                        registerStarMap(out, "moon");
-                        registerStarMap(out, "mars");
-                        registerStarMap(out, "mercury");
-                        registerStarMap(out, "venus");
-                    },
+                    NorthstarItems.STAR_MAP.get(), NorthstarCreativeModeTab::registerStarMaps,
                     NorthstarItems.IRON_SPACE_SUIT_CHESTPIECE.get(), out -> registerSpaceSuit(out, NorthstarItems.IRON_SPACE_SUIT_CHESTPIECE.get()),
                     NorthstarItems.MARTIAN_STEEL_SPACE_SUIT_CHESTPIECE.get(), out -> registerSpaceSuit(out, NorthstarItems.MARTIAN_STEEL_SPACE_SUIT_CHESTPIECE.get())
             );
@@ -75,6 +75,16 @@ public class NorthstarCreativeModeTab {
                 }
             }
         };
+    }
+
+    private static void registerStarMaps(CreativeModeTab.Output event) {
+        Set<ResourceKey<Level>> emittedDimensions = new HashSet<>();
+        for (PlanetDefinition planet : PlanetRegistry.all()) {
+            if (!planet.reachableByRocket() || planet.dimension() == null || !emittedDimensions.add(planet.dimension())) {
+                continue;
+            }
+            registerStarMap(event, planet.id());
+        }
     }
 
     private static void registerStarMap(CreativeModeTab.Output event, String planet) {

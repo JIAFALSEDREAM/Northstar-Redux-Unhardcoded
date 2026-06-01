@@ -72,8 +72,8 @@ public class TelescopeBlockEntity extends SmartBlockEntity implements MenuProvid
 
         reading.set(DataComponents.CUSTOM_NAME, Component.translatable("item.northstar.reading_" + name).setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE).withItalic(false)));
         reading.set(DataComponents.LORE, new ItemLore(List.of(
-                Component.literal("X: " + x).setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false)),
-                Component.literal("Y: " + y).setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false))
+                Component.translatable("northstar.gui.telescope.coordinate_x", x).setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false)),
+                Component.translatable("northstar.gui.telescope.coordinate_y", y).setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false))
         )));
 
         reading.set(NorthstarDataComponents.PLANET, name);

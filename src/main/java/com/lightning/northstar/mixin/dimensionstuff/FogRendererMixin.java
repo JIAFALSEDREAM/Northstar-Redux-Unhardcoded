@@ -1,6 +1,7 @@
 package com.lightning.northstar.mixin.dimensionstuff;
 
-import com.lightning.northstar.world.dimension.NorthstarDimensions;
+import com.lightning.northstar.api.planet.SkyProfile;
+import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.lightning.northstar.world.oxygen.NorthstarOxygen;
 import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -47,9 +48,10 @@ public abstract class FogRendererMixin {
     @Inject(method = "setupColor", at = @At("HEAD"), cancellable = true)
     private static void setupColor(Camera pActiveRenderInfo, float pPartialTicks, ClientLevel pLevel, int pRenderDistanceChunks, float pBossColorModifier, CallbackInfo info) {
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
         boolean isSubmerged = !Minecraft.getInstance().gameRenderer.getMainCamera().getBlockAtCamera().getFluidState().isEmpty();
         if (!isSubmerged) {
-            if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
+            if (skyProfile == SkyProfile.MARS_LIKE) {
                 float playerEyeLevel = (float) Minecraft.getInstance().player.getEyePosition(3).y;
                 info.cancel();
                 Vector3f fogColor = ClientHooks.getFogColor(pActiveRenderInfo, pPartialTicks, pLevel, pRenderDistanceChunks, pBossColorModifier, fogRed, fogGreen, fogBlue);
@@ -99,7 +101,7 @@ public abstract class FogRendererMixin {
                     RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
                 }
             }
-            if (player_dim == NorthstarDimensions.VENUS_DIM_KEY) {
+            if (skyProfile == SkyProfile.VENUS_LIKE) {
                 float playerEyeLevel = (float) Minecraft.getInstance().player.getEyePosition(3).y;
                 if (playerEyeLevel > 600) {
                     info.cancel();
@@ -159,7 +161,8 @@ public abstract class FogRendererMixin {
         FogType fogtype = pCamera.getFluidInCamera();
         Fluid fluidInCam = pCamera.getBlockAtCamera().getFluidState().getType();
         ResourceKey<Level> player_dim = Minecraft.getInstance().level.dimension();
-        if (player_dim == NorthstarDimensions.MARS_DIM_KEY) {
+        SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(player_dim);
+        if (skyProfile == SkyProfile.MARS_LIKE) {
             float playerEyeLevel = (float) Minecraft.getInstance().player.getEyePosition(3).y;
             ClientLevel level = Minecraft.getInstance().level;
             float rain_det = Minecraft.getInstance().level.getRainLevel(pPartialTicks);
@@ -288,7 +291,7 @@ public abstract class FogRendererMixin {
                 RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
             }
         }
-        if (player_dim == NorthstarDimensions.VENUS_DIM_KEY) {
+        if (skyProfile == SkyProfile.VENUS_LIKE) {
             float playerEyeLevel = (float) Minecraft.getInstance().player.getEyePosition(3).y;
             ClientLevel level = Minecraft.getInstance().level;
 
@@ -359,8 +362,9 @@ public abstract class FogRendererMixin {
         boolean isSubmerged = !minecraft.gameRenderer.getMainCamera().getBlockAtCamera().getFluidState().isEmpty();
         if (!isSubmerged) {
             ResourceKey<Level> dimension = minecraft.level.dimension();
+            SkyProfile skyProfile = NorthstarPlanets.getSkyProfile(dimension);
             RenderSystem.setShaderFogColor(fogRed, fogGreen, fogBlue);
-            if (dimension == NorthstarDimensions.MOON_DIM_KEY || dimension == NorthstarDimensions.MERCURY_DIM_KEY || dimension == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
+            if (skyProfile == SkyProfile.MOON_LIKE || skyProfile == SkyProfile.MERCURY_LIKE || skyProfile == SkyProfile.SPACE) {
                 RenderSystem.setShaderFogColor(0, 0, 0);
                 info.cancel();
             }

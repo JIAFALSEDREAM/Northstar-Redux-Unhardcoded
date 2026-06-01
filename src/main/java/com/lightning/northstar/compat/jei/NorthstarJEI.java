@@ -9,15 +9,20 @@ import com.lightning.northstar.compat.jei.category.EngravingCategory;
 import com.lightning.northstar.compat.jei.category.FreezingCategory;
 import com.lightning.northstar.compat.jei.category.FuelTypeCategory;
 import com.lightning.northstar.content.NorthstarBlocks;
+import com.lightning.northstar.content.NorthstarDataComponents;
+import com.lightning.northstar.content.NorthstarItems;
 import com.lightning.northstar.content.NorthstarRecipeTypes;
 import com.lightning.northstar.content.NorthstarRegistries;
 import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
+import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.common.util.RegistryUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
@@ -28,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.material.Fluid;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -79,6 +85,11 @@ public class NorthstarJEI implements IModPlugin {
     @Nonnull
     public ResourceLocation getPluginUid() {
         return ID;
+    }
+
+    @Override
+    public void registerItemSubtypes(ISubtypeRegistration registration) {
+        registration.registerSubtypeInterpreter(NorthstarItems.STAR_MAP.get(), StarMapSubtypeInterpreter.INSTANCE);
     }
 
     @Override
@@ -150,6 +161,28 @@ public class NorthstarJEI implements IModPlugin {
     public static boolean doOutputsMatch(Recipe<?> recipe1, Recipe<?> recipe2) {
         RegistryAccess registry = Minecraft.getInstance().level.registryAccess();
         return ItemStack.isSameItem(recipe1.getResultItem(registry), recipe2.getResultItem(registry));
+    }
+
+    /**
+     * Lets JEI treat star maps for different planet ids as distinct ingredient
+     * entries. Without this, JEI collapses registry-generated star maps into the
+     * plain star map item and reports duplicate creative-tab entries.
+     */
+    private static class StarMapSubtypeInterpreter implements ISubtypeInterpreter<ItemStack> {
+        private static final StarMapSubtypeInterpreter INSTANCE = new StarMapSubtypeInterpreter();
+
+        @Override
+        @Nullable
+        public Object getSubtypeData(ItemStack ingredient, UidContext context) {
+            return ingredient.get(NorthstarDataComponents.PLANET);
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public String getLegacyStringSubtypeInfo(ItemStack ingredient, UidContext context) {
+            String planet = ingredient.get(NorthstarDataComponents.PLANET);
+            return planet == null ? "" : "planet:" + planet;
+        }
     }
 
 }

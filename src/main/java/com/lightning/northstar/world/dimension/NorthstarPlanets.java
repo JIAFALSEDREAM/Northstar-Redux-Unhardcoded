@@ -1,8 +1,15 @@
 package com.lightning.northstar.world.dimension;
 
 import com.lightning.northstar.Northstar;
+import com.lightning.northstar.api.planet.OrbitDefinition;
+import com.lightning.northstar.api.planet.PlanetDefinition;
+import com.lightning.northstar.api.planet.PlanetRegistry;
+import com.lightning.northstar.api.planet.SkyProfile;
+import com.lightning.northstar.api.planet.WindDefinition;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -11,21 +18,15 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import javax.annotation.Nullable;
 
 @EventBusSubscriber(modid = Northstar.MOD_ID)
-public class NorthstarPlanets {     
-    
+public class NorthstarPlanets {
+
     private static final double EARTH_GRAV = 1;
     private static final double MOON_GRAV = 0.16;
     private static final double OUTER_MOON_GRAV = 0.06;
-    private static final double SUPER_GRAV = 4;
     private static final double MARS_GRAV = 0.37;
     private static final double VENUS_GRAV = 0.89;
     private static final double MERCURY_GRAV = 0.38;
 
-    private static final double GANYMEDE_GRAV = 0.14;
-    private static final double TITAN_GRAV = 0.14;
-    private static final double EUROPA_GRAV = 0.13;
-
-    // MERCURY COORDS
     public static double mercury_x = 0;
     public static double mercury_y = 0;
     public static float mercury_orbit_speed = (float) (Math.PI / 12000);
@@ -35,7 +36,6 @@ public class NorthstarPlanets {
     public static double mercury_origin_y = 0;
     static int mercury_time;
 
-    //VENUS COORDS
     public static double venus_x = 0;
     public static double venus_y = 0;
     public static float venus_orbit_speed = (float) (Math.PI / 32000);
@@ -45,7 +45,6 @@ public class NorthstarPlanets {
     public static double venus_origin_y = 0;
     static int venus_time;
 
-    //EARTH COORDS
     public static double earth_x = 0;
     public static double earth_y = 0;
     public static float earth_orbit_speed = (float) (Math.PI / 32000);
@@ -55,8 +54,6 @@ public class NorthstarPlanets {
     public static double earth_origin_y = 0;
     static int earth_time;
 
-    // EARTH MOON COORDS
-    // "earth moon" because these are the coords for the moon when viewed from earth
     public static double earth_moon_x = 0;
     public static double earth_moon_y = 0;
     public static float earth_moon_orbit_speed = (float) (Math.PI / 150000);
@@ -66,8 +63,6 @@ public class NorthstarPlanets {
     public static double earth_moon_origin_y = 0;
     static int earth_moon_time;
 
-    //MOON COORDS
-    //this is seperate because these are the coords for the moon when viewed from NOT earth
     public static double moon_x = 0;
     public static double moon_y = 0;
     public static float moon_orbit_speed = (float) (Math.PI / 10000);
@@ -75,7 +70,6 @@ public class NorthstarPlanets {
     public static double moon_orbit_radius_y = 20;
     static int moon_time;
 
-    // MARS COORDS
     public static double mars_x = 0;
     public static double mars_y = 0;
     public static float mars_orbit_speed = (float) (Math.PI / 100000);
@@ -85,7 +79,6 @@ public class NorthstarPlanets {
     public static double mars_origin_y = 0;
     static int mars_time;
 
-    // PHOBOS & DEIMOS COORDS
     public static double pd_x = 0;
     public static double pd_y = 0;
     public static float pd_orbit_speed = (float) (Math.PI / 10000);
@@ -93,7 +86,6 @@ public class NorthstarPlanets {
     public static double pd_orbit_radius_y = 20;
     static int pd_time;
 
-    // CERES COORDS
     public static double ceres_x = 0;
     public static double ceres_y = 0;
     public static float ceres_orbit_speed = (float) (Math.PI / 200000);
@@ -103,7 +95,6 @@ public class NorthstarPlanets {
     public static double ceres_origin_y = 0;
     static int ceres_time;
 
-    //JUPITER COORDS
     public static double jupiter_x = 0;
     public static double jupiter_y = 0;
     public static float jupiter_orbit_speed = (float) (Math.PI / 32000);
@@ -113,7 +104,6 @@ public class NorthstarPlanets {
     public static double jupiter_origin_y = 0;
     static int jupiter_time;
 
-    //SATURN COORDS
     public static double saturn_x = 0;
     public static double saturn_y = 0;
     public static float saturn_orbit_speed = (float) (Math.PI / 40000);
@@ -123,7 +113,6 @@ public class NorthstarPlanets {
     public static double saturn_origin_y = 0;
     static int saturn_time;
 
-    //URANUS COORDS
     public static double uranus_x = 0;
     public static double uranus_y = 0;
     public static float uranus_orbit_speed = (float) (Math.PI / 50000);
@@ -133,7 +122,6 @@ public class NorthstarPlanets {
     public static double uranus_origin_y = 0;
     static int uranus_time;
 
-    //NEPTUNE COORDS
     public static double neptune_x = 0;
     public static double neptune_y = 0;
     public static float neptune_orbit_speed = (float) (Math.PI / 80000);
@@ -143,7 +131,6 @@ public class NorthstarPlanets {
     public static double neptune_origin_y = 0;
     static int neptune_time;
 
-    //PLUTO COORDS
     public static double pluto_x = 0;
     public static double pluto_y = 0;
     public static float pluto_orbit_speed = (float) (Math.PI / 150000);
@@ -153,7 +140,6 @@ public class NorthstarPlanets {
     public static double pluto_origin_y = 0;
     static int pluto_time;
 
-    //ERIS COORDS
     public static double eris_x = 0;
     public static double eris_y = 0;
     public static float eris_orbit_speed = (float) (Math.PI / 16000);
@@ -165,283 +151,534 @@ public class NorthstarPlanets {
 
     static long time;
 
+    /**
+     * Keeps legacy public coordinate fields synchronized while the registry is
+     * the actual source of planet positions.
+     */
     @SubscribeEvent
-    public static void onWorldTick(LevelTickEvent.Pre event){
+    public static void onWorldTick(LevelTickEvent.Pre event) {
         time = event.getLevel().getGameTime() * 2L;
-        //mercury!!!! yeah cool
-        double mercury_radian = mercury_orbit_speed * time;
-        mercury_x = (mercury_origin_x + (Math.cos(mercury_radian)* mercury_orbit_radius_x));
-        mercury_y = (mercury_origin_y + (Math.sin(mercury_radian)* mercury_orbit_radius_y));
-        //venus, very cool (or not, actually)
-        double venus_radian = venus_orbit_speed * time;
-        venus_x = (venus_origin_x + (Math.cos(venus_radian)* venus_orbit_radius_x));
-        venus_y = (venus_origin_y + (Math.sin(venus_radian)* venus_orbit_radius_y));
-
-        //calcs for earth when viewed from another planet
-        double earth_radian = earth_orbit_speed * time;
-        earth_x = (earth_origin_x + (Math.cos(earth_radian)* earth_orbit_radius_x));
-        earth_y = (earth_origin_y + (Math.sin(earth_radian)* earth_orbit_radius_y));
-
-        //calcs for moon when viewed from earth
-        double earth_moon_radian = earth_moon_orbit_speed * time;
-        earth_moon_x = (earth_moon_origin_x + (Math.cos(earth_moon_radian)* earth_moon_orbit_radius_x));
-        earth_moon_y = (earth_moon_origin_y + (Math.sin(earth_moon_radian)* earth_moon_orbit_radius_y));
-
-        //calcs for moon when NOT viewed from earth
-        double moon_radian = moon_orbit_speed * time;
-        moon_x = (earth_x + (Math.cos(moon_radian)* moon_orbit_radius_x));
-        moon_y = (earth_y + (Math.sin(moon_radian)* moon_orbit_radius_y));
-        //mars my beloved
-        double mars_radian = mars_orbit_speed * time;
-        mars_x = (mars_origin_x + (Math.cos(mars_radian)* mars_orbit_radius_x));
-        mars_y = (mars_origin_y + (Math.sin(mars_radian)* mars_orbit_radius_y));
-        //phobos and deimos (doom reference????)
-        double pd_radian = pd_orbit_speed * time;
-        pd_x = (mars_x + (Math.cos(pd_radian)* pd_orbit_radius_x));
-        pd_y = (mars_y + (Math.sin(pd_radian)* pd_orbit_radius_y));
-
-        //calcs for ceres
-        double ceres_radian = ceres_orbit_speed * time;
-        ceres_x = (ceres_x + (Math.cos(ceres_radian)* ceres_orbit_radius_x));
-        ceres_y = (ceres_y + (Math.sin(ceres_radian)* ceres_orbit_radius_y));
-
-        //calcs for jupiter
-        double jupiter_radian = jupiter_orbit_speed * time;
-        jupiter_x = (jupiter_origin_x + (Math.cos(jupiter_radian)* jupiter_orbit_radius_x));
-        jupiter_y = (jupiter_origin_y + (Math.sin(jupiter_radian)* jupiter_orbit_radius_y));
-
-        //calcs for saturn
-        double saturn_radian = saturn_orbit_speed * time;
-        saturn_x = (saturn_origin_x + (Math.cos(saturn_radian)* saturn_orbit_radius_x));
-        saturn_y = (saturn_origin_y + (Math.sin(saturn_radian)* saturn_orbit_radius_y));
-
-        //calcs for uranus
-        double uranus_radian = uranus_orbit_speed * time;
-        uranus_x = (uranus_origin_x + (Math.cos(uranus_radian)* uranus_orbit_radius_x));
-        uranus_y = (uranus_origin_y + (Math.sin(uranus_radian)* uranus_orbit_radius_y));
-
-        //calcs for neptune
-        double neptune_radian = neptune_orbit_speed * time;
-        neptune_x = (neptune_origin_x + (Math.cos(neptune_radian)* neptune_orbit_radius_x));
-        neptune_y = (neptune_origin_y + (Math.sin(neptune_radian)* neptune_orbit_radius_y));
-
-        //calcs for pluto
-        //pluto deserves to be here :]
-        double pluto_radian = pluto_orbit_speed * time;
-        pluto_x = (pluto_origin_x + (Math.cos(pluto_radian)* pluto_orbit_radius_x));
-        pluto_y = (pluto_origin_y + (Math.sin(pluto_radian)* pluto_orbit_radius_y));
-
-
-        //calcs for eris
-        //eris ALSO deserves to be here :]
-        //no one ever talks about eris and that makes me sad :[
-        double eris_radian = eris_orbit_speed * time;
-        eris_x = (eris_origin_x + (Math.cos(eris_radian)* eris_orbit_radius_x));
-        eris_y = (eris_origin_y + (Math.sin(eris_radian)* eris_orbit_radius_y));
+        PlanetRegistry.tick(time);
+        syncLegacyCoordinates();
     }
 
     public static double getPlanetX(String name) {
-        return switch (name) {
-            case "mercury" -> mercury_x;
-            case "venus" -> venus_x;
-            case "earth" -> earth_x;
-            case "earth_moon" -> earth_moon_x;
-            case "moon" -> moon_x;
-            case "mars" -> mars_x;
-            case "ceres" -> ceres_x;
-            case "jupiter" -> jupiter_x;
-            case "saturn" -> saturn_x;
-            case "uranus" -> uranus_x;
-            case "neptune" -> neptune_x;
-            case "pluto" -> pluto_x;
-            case "eris" -> eris_x;
-            default -> 0;
-        };
+        return PlanetRegistry.x(name);
     }
+
     public static double getPlanetY(String name) {
-        return switch (name) {
-            case "mercury" -> mercury_y;
-            case "venus" -> venus_y;
-            case "earth" -> earth_y;
-            case "earth_moon" -> earth_moon_y;
-            case "moon" -> moon_y;
-            case "mars" -> mars_y;
-            case "ceres" -> ceres_y;
-            case "jupiter" -> jupiter_y;
-            case "saturn" -> saturn_y;
-            case "uranus" -> uranus_y;
-            case "neptune" -> neptune_y;
-            case "pluto" -> pluto_y;
-            case "eris" -> eris_y;
-            default -> 0;
-        };
+        return PlanetRegistry.y(name);
     }
-    public static String getPlanetName(ResourceKey<Level> level) {
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {return "mars";}
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {return "moon";}
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {return "venus";}
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {return "mercury";}
-        if (level == Level.OVERWORLD) {return "earth";}
-        return "earth";
+
+    public static String getPlanetName(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {
+            // Preserve old return-ticket/star-map strings: earth orbit returns
+            // to earth rather than storing earth_orbit.
+            return "earth";
+        }
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::id)
+                .orElse("earth");
     }
+
     public static boolean planetHasSky(ResourceKey<Level> level) {
-        if (level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return true;}
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {return true;}
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {return true;}
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {return true;}
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {return true;}
-        if (level == Level.OVERWORLD) {return true;}
-        return false;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::hasSky)
+                .orElse(false);
     }
 
     public static int getPlanetTemp(ResourceKey<Level> level) {
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {return -100;}
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {return -183;}
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {return 464;}
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {return 400;}
-        if (level == Level.OVERWORLD) {return 15;}
-        if (level == Level.NETHER) {return 230;}
-        if (level == Level.END) {return 4;}
-        return 15;
+        if (level == Level.NETHER) {
+            return 230;
+        }
+        if (level == Level.END) {
+            return 4;
+        }
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::temperature)
+                .orElse(15);
     }
-    public static int getPlanetAtmosphereCost(ResourceKey<Level> level) {
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {return 200;}
-        if (level == Level.OVERWORLD) {return 1600;}
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {return 0;}
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {return 4000;}
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {return 0;}
-        return 0;
+
+    public static float getBaseTemperature(Level level, BlockPos pos) {
+        if (level.dimension() == NorthstarDimensions.MERCURY_DIM_KEY) {
+            // Exact built-in Mercury behavior is kept for compatibility.
+            return level.canSeeSky(pos) && !level.isNight() ? 434 : -200;
+        }
+        return PlanetRegistry.byDimension(level.dimension())
+                .filter(definition -> definition.skyProfile() == SkyProfile.MERCURY_LIKE)
+                .map(definition -> level.canSeeSky(pos) && !level.isNight() ? (float) definition.temperature() : -200F)
+                .orElseGet(() -> (float) getPlanetTemp(level.dimension()));
     }
+
+    public static int getPlanetAtmosphereCost(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::atmosphereCost)
+                .orElse(0);
+    }
+
     public static int getComputingCost(ResourceKey<Level> level) {
-        if (level == NorthstarDimensions.MARS_DIM_KEY) {return 400;}
-        if (level == Level.OVERWORLD) {return 0;}
-        if (level == NorthstarDimensions.MOON_DIM_KEY) {return 50;}
-        if (level == NorthstarDimensions.VENUS_DIM_KEY) {return 200;}
-        if (level == NorthstarDimensions.MERCURY_DIM_KEY) {return 800;}
-        return 0;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::computingCost)
+                .orElse(0);
     }
 
     public static @Nullable ResourceKey<Level> getPlanetDimension(String name) {
-        return switch (name) {
-            case "mercury" -> NorthstarDimensions.MERCURY_DIM_KEY;
-            case "mars" -> NorthstarDimensions.MARS_DIM_KEY;
-            case "venus" -> NorthstarDimensions.VENUS_DIM_KEY;
-            case "earth" -> Level.OVERWORLD;
-            case "earth_moon", "moon" -> NorthstarDimensions.MOON_DIM_KEY;
-            default -> null;
-        };
+        return PlanetRegistry.byId(name)
+                // Old items may contain telescope-only ids. They should not
+                // become rocket targets unless the definition opts in.
+                .filter(PlanetDefinition::reachableByRocket)
+                .map(PlanetDefinition::dimension)
+                .orElse(null);
     }
-    public static boolean getPlanetOxy(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return false;}
-        return true;
+
+    public static boolean isRocketTarget(String name, @Nullable ResourceKey<Level> target) {
+        return target != null && target == getPlanetDimension(name);
     }
+
+    public static boolean getPlanetOxy(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::hasOxygen)
+                .orElse(true);
+    }
+
+    public static boolean hasAtmosphere(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::hasAtmosphere)
+                .orElse(true);
+    }
+
     public static boolean hasNormalGrav(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return false;}
-        return true;
+        return getGravMultiplier(level) == EARTH_GRAV;
     }
 
     public static boolean canSeeSkyAtDay(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return true;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return true;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return true;}
-        return false;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::canSeeSkyAtDay)
+                .orElse(false);
     }
 
     public static boolean hasWeather(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return false;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return false;}
-        return true;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::hasWeather)
+                .orElse(true);
     }
 
-    public static double getGravMultiplier(ResourceKey<Level> level) {
-        // I love spaghetti
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return MOON_GRAV;}
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return MARS_GRAV;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return MERCURY_GRAV;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return VENUS_GRAV;}
-        if(level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return OUTER_MOON_GRAV;}
-        return 1;
+    public static SkyProfile getSkyProfile(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::skyProfile)
+                .orElse(SkyProfile.DEFAULT);
     }
 
-    public static double getEngineConstant(ResourceKey<Level> level) {
-        // I love spaghetti
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return 1;}
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return 3;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return 6;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return 9;}
-        if(level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return 1;}
-        return 1;
+    public static double getGravMultiplier(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::gravityMultiplier)
+                .orElse(EARTH_GRAV);
+    }
+
+    public static double getLivingGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        return getGravMultiplier(level);
+    }
+
+    /**
+     * Item and throwable gravity historically used a slightly different Venus
+     * value than the main planet gravity. Keep that quirk centralized until
+     * entity-category gravity becomes explicit planet data.
+     */
+    public static double getItemGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
+            return 0.88;
+        }
+        return getGravMultiplier(level);
+    }
+
+    public static double getThrowableGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
+            return 0.88;
+        }
+        return getGravMultiplier(level);
+    }
+
+    /**
+     * Boats, minecarts, and arrows had gameplay-tuned gravity values that do
+     * not match physical planet gravity. These helpers preserve old behavior
+     * while removing per-mixin dimension switches.
+     */
+    public static double getBoatGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
+            return 0.92;
+        }
+        if (level == NorthstarDimensions.MOON_DIM_KEY || level == NorthstarDimensions.MARS_DIM_KEY
+                || level == NorthstarDimensions.MERCURY_DIM_KEY || isInOrbit(level)) {
+            return 0.65;
+        }
+        return getGravMultiplier(level);
+    }
+
+    public static double getMinecartGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.MOON_DIM_KEY) {
+            return 0.64;
+        }
+        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
+            return 0.92;
+        }
+        if (level == NorthstarDimensions.MARS_DIM_KEY || level == NorthstarDimensions.MERCURY_DIM_KEY || isInOrbit(level)) {
+            return 0.65;
+        }
+        return getGravMultiplier(level);
+    }
+
+    public static double getArrowGravityMultiplier(@Nullable ResourceKey<Level> level) {
+        if (level == NorthstarDimensions.VENUS_DIM_KEY) {
+            return 0.92;
+        }
+        if (level == NorthstarDimensions.MOON_DIM_KEY || level == NorthstarDimensions.MARS_DIM_KEY
+                || level == NorthstarDimensions.MERCURY_DIM_KEY || isInOrbit(level)) {
+            return 0.5;
+        }
+        return getGravMultiplier(level);
+    }
+
+    /** True when Mars-like weather should push entities/items during storms. */
+    public static boolean hasDustStormPush(Level level) {
+        return PlanetRegistry.byDimension(level.dimension())
+                .map(definition -> definition.skyProfile() == SkyProfile.MARS_LIKE && definition.hasWeather() && !definition.hasOxygen())
+                .orElse(false);
+    }
+
+    public static double getEngineConstant(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::engineConstant)
+                .orElse(1.0);
     }
 
     public static float getWindMultiplier(Level level) {
-        // I love spaghetti
-        ResourceKey<Level> dim = level.dimension();
-        if(dim == NorthstarDimensions.MOON_DIM_KEY) {return 0;}
-        if(dim == NorthstarDimensions.MARS_DIM_KEY) {
-            if(level.isRaining())
-                return 1;
-            return 0;}
-        if(dim == NorthstarDimensions.MERCURY_DIM_KEY) {return 0;}
-        if(dim == NorthstarDimensions.VENUS_DIM_KEY) {
-            if(level.isRaining())
-                return 0.7f;
-            return 0.5f;}
-        if(dim == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return 0;}
-        return 1;
+        return PlanetRegistry.byDimension(level.dimension())
+                .map(PlanetDefinition::wind)
+                .map(wind -> wind.multiplier(level))
+                .orElse(1.0f);
+    }
+
+    public static boolean hasWind(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::wind)
+                .map(wind -> wind.clearMultiplier() != 0 || wind.weatherMultiplier() != 0)
+                .orElse(true);
     }
 
     public static boolean isCustomDimension(ResourceLocation resourceLocation) {
-        if(resourceLocation == NorthstarDimensions.MARS_DIM_KEY.location()) {return true;}
-        if(resourceLocation == NorthstarDimensions.MERCURY_DIM_KEY.location()) {return true;}
-        if(resourceLocation == NorthstarDimensions.MOON_DIM_KEY.location()) {return true;}
-        if(resourceLocation == NorthstarDimensions.VENUS_DIM_KEY.location()) {return true;}
-        return false;
-    }
-    public static long getSeedOffset(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return 1;}
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return 2;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return 3;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return 4;}
-        return 0;
+        return PlanetRegistry.isCustomDimension(resourceLocation);
     }
 
+    public static long getSeedOffset(ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::seedOffset)
+                .orElse(0L);
+    }
 
     public static float getSunMultiplier(ResourceKey<Level> level) {
-        if(level == Level.OVERWORLD) {return 1;}
-
-        if(level == NorthstarDimensions.MERCURY_DIM_KEY) {return 8;}
-        if(level == NorthstarDimensions.VENUS_DIM_KEY) {return 0.6f;}
-        if(level == NorthstarDimensions.MOON_DIM_KEY) {return 1.5f;}
-        if(level == NorthstarDimensions.MARS_DIM_KEY) {return 1.2f;}
-
-
-
-
-        return 1;
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::sunMultiplier)
+                .orElse(1.0f);
     }
 
-    public static boolean isInOrbit(ResourceKey<Level> level) {
-        if(level == NorthstarDimensions.EARTH_ORBIT_DIM_KEY) {return true;}
-        return false;
-
+    public static boolean isInOrbit(@Nullable ResourceKey<Level> level) {
+        return PlanetRegistry.byDimension(level)
+                .map(PlanetDefinition::orbitDimension)
+                .orElse(false);
     }
 
-    public static boolean isInterplanetary(ResourceKey<Level> home, ResourceKey<Level> dest) {
-        boolean flag = true;
-        if((home == Level.OVERWORLD && dest == NorthstarDimensions.MOON_DIM_KEY) || (dest == Level.OVERWORLD && home == NorthstarDimensions.MOON_DIM_KEY) || (dest == home)) {
-            flag = false;
+    public static boolean isInterplanetary(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest) {
+        if (home == null || dest == null) {
+            return true;
         }
-        return flag;
+        if (dest == home) {
+            return false;
+        }
+        return requiresInterplanetaryNavigator(home, dest);
+    }
+
+    public static boolean requiresInterplanetaryNavigator(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest) {
+        if (home == null || dest == null || dest == home) {
+            return false;
+        }
+        return PlanetRegistry.byDimension(dest)
+                .map(PlanetDefinition::requiresInterplanetaryNavigator)
+                .orElse(true);
+    }
+
+    public static int getTravelFuelCost(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest) {
+        return getTravelFuelCost(home, dest, home);
+    }
+
+    public static int getReturnFuelCost(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest) {
+        return getTravelFuelCost(home, dest, dest);
+    }
+
+    private static int getTravelFuelCost(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest, @Nullable ResourceKey<Level> atmosphereSource) {
+        String homeId = getPlanetName(home);
+        String destId = getPlanetName(dest);
+
+        int homeX = (int) getPlanetX(homeId);
+        int homeY = (int) getPlanetY(homeId);
+        int destX = (int) getPlanetX(destId);
+        int destY = (int) getPlanetY(destId);
+
+        int distance = (int) (Math.pow(homeX - destX, 2) + Math.pow(homeY - destY, 2));
+        distance = Mth.roundToward(distance, 100) / 20;
+        int cost = distance + getPlanetAtmosphereCost(atmosphereSource) + 1000;
+        return cost * 8;
+    }
+
+    public static int getRequiredEngines(@Nullable ResourceKey<Level> home, @Nullable ResourceKey<Level> dest) {
+        int homeAtmosphere = getPlanetAtmosphereCost(home) / 100;
+        int destinationAtmosphere = getPlanetAtmosphereCost(dest) / 100;
+
+        double gravity = Math.max(getGravMultiplier(dest), getGravMultiplier(home));
+        double constant = Math.max(getEngineConstant(dest), getEngineConstant(home));
+
+        return (int) (Mth.clamp(((destinationAtmosphere + homeAtmosphere) * gravity), 6, 64) + constant);
     }
 
     public static void register() {
+        PlanetRegistry.clear();
+
+        // Built-ins intentionally mirror Redux behavior first. New content
+        // should be added through PlanetRegistry callbacks or later datapacks.
+        registerBuiltIn(PlanetDefinition.builder("earth")
+                .dimension(Level.OVERWORLD)
+                .orbit(OrbitDefinition.aroundOrigin(earth_origin_x, earth_origin_y, earth_orbit_radius_x, earth_orbit_radius_y, earth_orbit_speed))
+                .gravityMultiplier(EARTH_GRAV)
+                .temperature(15)
+                .oxygen(true)
+                .atmosphere(true)
+                .atmosphereCost(1600)
+                .computingCost(0)
+                .engineConstant(1)
+                .sunMultiplier(1)
+                .wind(WindDefinition.NORMAL)
+                .skyProfile(SkyProfile.DEFAULT)
+                .telescopeTexture(Northstar.asResource("textures/environment/earth_far.png"))
+                .telescopeHiddenIn(Level.OVERWORLD, NorthstarDimensions.MOON_DIM_KEY)
+                .reachableByRocket(true)
+                .requiresInterplanetaryNavigator(false)
+                .hasSky(true)
+                .hasWeather(true)
+                .heat(0.4, 100)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("moon")
+                .dimension(NorthstarDimensions.MOON_DIM_KEY)
+                .orbit(OrbitDefinition.around("earth", moon_orbit_radius_x, moon_orbit_radius_y, moon_orbit_speed))
+                .gravityMultiplier(MOON_GRAV)
+                .temperature(-183)
+                .oxygen(false)
+                .atmosphere(false)
+                .atmosphereCost(0)
+                .computingCost(50)
+                .engineConstant(1)
+                .sunMultiplier(1.5f)
+                .wind(WindDefinition.NONE)
+                .skyProfile(SkyProfile.MOON_LIKE)
+                .telescopeTexture(Northstar.asResource("textures/environment/moon_far.png"))
+                .telescopeHiddenIn(Level.OVERWORLD, NorthstarDimensions.MOON_DIM_KEY)
+                .reachableByRocket(true)
+                .hasSky(true)
+                .canSeeSkyAtDay(true)
+                .hasWeather(false)
+                .customDimension(true)
+                .seedOffset(3)
+                .heat(0, 0)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("earth_moon")
+                .dimension(NorthstarDimensions.MOON_DIM_KEY)
+                .displayNameLangKey("planets.earth_moon.name")
+                .orbit(OrbitDefinition.aroundOrigin(earth_moon_origin_x, earth_moon_origin_y, earth_moon_orbit_radius_x, earth_moon_orbit_radius_y, earth_moon_orbit_speed))
+                .gravityMultiplier(MOON_GRAV)
+                .temperature(-183)
+                .oxygen(false)
+                .atmosphere(false)
+                .telescopeTexture(Northstar.asResource("textures/environment/moon_far.png"))
+                .telescopeTooltipId("moon")
+                .telescopeHitbox(24, 0)
+                .telescopeMoonPhase(true)
+                .telescopeVisibleOnlyIn(Level.OVERWORLD)
+                .reachableByRocket(true)
+                .hasWeather(false)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("earth_orbit")
+                .dimension(NorthstarDimensions.EARTH_ORBIT_DIM_KEY)
+                .orbit(OrbitDefinition.fixed(0, 0))
+                .gravityMultiplier(OUTER_MOON_GRAV)
+                .temperature(15)
+                .oxygen(true)
+                .atmosphere(false)
+                .atmosphereCost(0)
+                .computingCost(0)
+                .engineConstant(1)
+                .sunMultiplier(1)
+                .wind(WindDefinition.NONE)
+                .skyProfile(SkyProfile.SPACE)
+                .observable(false)
+                .reachableByRocket(false)
+                .hasSky(true)
+                .canSeeSkyAtDay(true)
+                .hasWeather(false)
+                .orbitDimension(true)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("mars")
+                .dimension(NorthstarDimensions.MARS_DIM_KEY)
+                .orbit(OrbitDefinition.aroundOrigin(mars_origin_x, mars_origin_y, mars_orbit_radius_x, mars_orbit_radius_y, mars_orbit_speed))
+                .gravityMultiplier(MARS_GRAV)
+                .temperature(-100)
+                .oxygen(false)
+                .atmosphere(true)
+                .atmosphereCost(200)
+                .computingCost(400)
+                .engineConstant(3)
+                .sunMultiplier(1.2f)
+                .wind(new WindDefinition(0, 1))
+                .skyProfile(SkyProfile.MARS_LIKE)
+                .telescopeTexture(Northstar.asResource("textures/environment/mars_far.png"))
+                .reachableByRocket(true)
+                .hasSky(true)
+                .hasWeather(true)
+                .customDimension(true)
+                .seedOffset(1)
+                .heat(0.05, 50)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("phobos_deimos")
+                .orbit(OrbitDefinition.around("mars", pd_orbit_radius_x, pd_orbit_radius_y, pd_orbit_speed))
+                .gravityMultiplier(0.01)
+                .temperature(-100)
+                .oxygen(false)
+                .atmosphere(false)
+                .telescopeTexture(Northstar.asResource("textures/environment/phobos_and_deimos_far.png"))
+                .telescopeHitbox(5, 5)
+                .telescopeHiddenIn(NorthstarDimensions.MARS_DIM_KEY)
+                .reachableByRocket(false)
+                .hasWeather(false)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("venus")
+                .dimension(NorthstarDimensions.VENUS_DIM_KEY)
+                .orbit(OrbitDefinition.aroundOrigin(venus_origin_x, venus_origin_y, venus_orbit_radius_x, venus_orbit_radius_y, venus_orbit_speed))
+                .gravityMultiplier(VENUS_GRAV)
+                .temperature(464)
+                .oxygen(false)
+                .atmosphere(true)
+                .atmosphereCost(4000)
+                .computingCost(200)
+                .engineConstant(9)
+                .sunMultiplier(0.6f)
+                .wind(new WindDefinition(0.5f, 0.7f))
+                .skyProfile(SkyProfile.VENUS_LIKE)
+                .telescopeTexture(Northstar.asResource("textures/environment/venus_far.png"))
+                .reachableByRocket(true)
+                .hasSky(true)
+                .hasWeather(true)
+                .customDimension(true)
+                .seedOffset(4)
+                .heat(5, 1000)
+                .build());
+
+        registerBuiltIn(PlanetDefinition.builder("mercury")
+                .dimension(NorthstarDimensions.MERCURY_DIM_KEY)
+                .orbit(OrbitDefinition.aroundOrigin(mercury_origin_x, mercury_origin_y, mercury_orbit_radius_x, mercury_orbit_radius_y, mercury_orbit_speed))
+                .gravityMultiplier(MERCURY_GRAV)
+                .temperature(400)
+                .oxygen(false)
+                .atmosphere(false)
+                .atmosphereCost(0)
+                .computingCost(800)
+                .engineConstant(6)
+                .sunMultiplier(8)
+                .wind(WindDefinition.NONE)
+                .skyProfile(SkyProfile.MERCURY_LIKE)
+                .telescopeTexture(Northstar.asResource("textures/environment/mercury_far.png"))
+                .telescopeHitbox(8, 7)
+                .reachableByRocket(true)
+                .hasSky(true)
+                .canSeeSkyAtDay(true)
+                .hasWeather(false)
+                .customDimension(true)
+                .seedOffset(2)
+                .heat(0, 0)
+                .build());
+
+        registerObservable("ceres", ceres_origin_x, ceres_origin_y, ceres_orbit_radius_x, ceres_orbit_radius_y, ceres_orbit_speed,
+                0.03, -173, false, false, "textures/environment/ceres_far.png", 6, 6);
+        registerObservable("jupiter", jupiter_origin_x, jupiter_origin_y, jupiter_orbit_radius_x, jupiter_orbit_radius_y, jupiter_orbit_speed,
+                2.53, -166, false, true, "textures/environment/jupiter_far.png", 12, 12);
+        registerObservable("saturn", saturn_origin_x, saturn_origin_y, saturn_orbit_radius_x, saturn_orbit_radius_y, saturn_orbit_speed,
+                1.06, -176, false, true, "textures/environment/saturn_far.png", 8, 8);
+        registerObservable("uranus", uranus_origin_x, uranus_origin_y, uranus_orbit_radius_x, uranus_orbit_radius_y, uranus_orbit_speed,
+                0.9, -195, false, true, "textures/environment/uranus_far.png", 8, 7);
+        registerObservable("neptune", neptune_origin_x, neptune_origin_y, neptune_orbit_radius_x, neptune_orbit_radius_y, neptune_orbit_speed,
+                1.14, -200, false, true, "textures/environment/neptune_far.png", 8, 7);
+        registerObservable("pluto", pluto_origin_x, pluto_origin_y, pluto_orbit_radius_x, pluto_orbit_radius_y, pluto_orbit_speed,
+                0.06, -225, false, false, "textures/environment/pluto_far.png", 6, 6);
+        registerObservable("eris", eris_origin_x, eris_origin_y, eris_orbit_radius_x, eris_orbit_radius_y, eris_orbit_speed,
+                0.08, -230, false, false, "textures/environment/eris_far.png", 6, 6);
+
+        PlanetRegistry.applyRegistrationCallbacks();
+        PlanetRegistry.tick(0);
+        syncLegacyCoordinates();
+    }
+
+    private static void registerObservable(String id, double originX, double originY, double radiusX, double radiusY, double speed,
+                                           double gravityMultiplier, int temperature, boolean hasOxygen, boolean hasAtmosphere,
+                                           String telescopeTexture, int telescopeHitRadius, int telescopeHitOffset) {
+        registerBuiltIn(PlanetDefinition.builder(id)
+                .orbit(OrbitDefinition.aroundOrigin(originX, originY, radiusX, radiusY, speed))
+                .gravityMultiplier(gravityMultiplier)
+                .temperature(temperature)
+                .oxygen(hasOxygen)
+                .atmosphere(hasAtmosphere)
+                .telescopeTexture(Northstar.asResource(telescopeTexture))
+                .telescopeHitbox(telescopeHitRadius, telescopeHitOffset)
+                .reachableByRocket(false)
+                .hasWeather(false)
+                .wind(WindDefinition.NONE)
+                .build());
+    }
+
+    private static void registerBuiltIn(PlanetDefinition definition) {
+        PlanetRegistry.register(definition);
+    }
+
+    private static void syncLegacyCoordinates() {
+        mercury_x = PlanetRegistry.x("mercury");
+        mercury_y = PlanetRegistry.y("mercury");
+        venus_x = PlanetRegistry.x("venus");
+        venus_y = PlanetRegistry.y("venus");
+        earth_x = PlanetRegistry.x("earth");
+        earth_y = PlanetRegistry.y("earth");
+        earth_moon_x = PlanetRegistry.x("earth_moon");
+        earth_moon_y = PlanetRegistry.y("earth_moon");
+        moon_x = PlanetRegistry.x("moon");
+        moon_y = PlanetRegistry.y("moon");
+        mars_x = PlanetRegistry.x("mars");
+        mars_y = PlanetRegistry.y("mars");
+        pd_x = PlanetRegistry.x("phobos_deimos");
+        pd_y = PlanetRegistry.y("phobos_deimos");
+        ceres_x = PlanetRegistry.x("ceres");
+        ceres_y = PlanetRegistry.y("ceres");
+        jupiter_x = PlanetRegistry.x("jupiter");
+        jupiter_y = PlanetRegistry.y("jupiter");
+        saturn_x = PlanetRegistry.x("saturn");
+        saturn_y = PlanetRegistry.y("saturn");
+        uranus_x = PlanetRegistry.x("uranus");
+        uranus_y = PlanetRegistry.y("uranus");
+        neptune_x = PlanetRegistry.x("neptune");
+        neptune_y = PlanetRegistry.y("neptune");
+        pluto_x = PlanetRegistry.x("pluto");
+        pluto_y = PlanetRegistry.y("pluto");
+        eris_x = PlanetRegistry.x("eris");
+        eris_y = PlanetRegistry.y("eris");
     }
 
 }
