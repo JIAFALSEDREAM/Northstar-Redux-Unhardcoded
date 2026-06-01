@@ -85,6 +85,15 @@
     ],
     "subtitle": "northstar.subtitle.mars_cobra_hurt"
   },
+  "mars_cobra_death": {
+    "sounds": [
+      "northstar:entity/mars_cobra/cobra_hurt1",
+      "northstar:entity/mars_cobra/cobra_hurt2",
+      "northstar:entity/mars_cobra/cobra_hurt3",
+      "northstar:entity/mars_cobra/cobra_hurt4"
+    ],
+    "subtitle": "northstar.subtitle.mars_cobra_death"
+  },
   "mars_cobra_hiss": {
     "sounds": [
       "northstar:entity/mars_cobra/cobra_hiss1",
@@ -280,7 +289,7 @@
       "northstar:entity/venus_mimic/mimic_die3",
       "northstar:entity/venus_mimic/mimic_die4"
     ],
-    "subtitle": "northstar.subtitle.mimic_die"
+    "subtitle": "northstar.subtitle.mimic_death"
   },
   "venus_mimic_idle": {
     "sounds": [

@@ -54,34 +54,40 @@ public class InterplanetaryNavigatorBlock extends Block implements ProperWaterlo
     public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         updateWater(level, state, pos);
 
-        DoubleBlockHalf half = state.getValue(HALF);
-        if (direction.getAxis() == Direction.Axis.Y && half == DoubleBlockHalf.LOWER == (direction == Direction.UP)) {
-            return neighborState.is(this) && neighborState.getValue(HALF) != half ? state.setValue(FACING, neighborState.getValue(FACING)) : Blocks.AIR.defaultBlockState();
-        } else {
-            return half == DoubleBlockHalf.LOWER && direction == Direction.DOWN && !state.canSurvive(level, pos) ? Blocks.AIR.defaultBlockState() : super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        // Create contraptions remove and restore moved blocks one at a time.
+        // A vanilla-style double-block neighbor check can see the other half as
+        // temporarily missing and delete this block during disassembly. Manual
+        // breaking still cleans up both halves in playerWillDestroy().
+        if (state.getValue(HALF) == DoubleBlockHalf.LOWER && direction == Direction.DOWN && !state.canSurvive(level, pos)) {
+            return Blocks.AIR.defaultBlockState();
         }
+        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 
     @Override
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && player.isCreative()) {
-            preventCreativeDropFromBottomPart(level, pos, state, player);
-        }
-
+        removeOtherHalf(level, pos, state, player);
         return super.playerWillDestroy(level, pos, state, player);
     }
 
-    protected static void preventCreativeDropFromBottomPart(Level pLevel, BlockPos pPos, BlockState pState, Player pPlayer) {
-        DoubleBlockHalf doubleblockhalf = pState.getValue(HALF);
-        if (doubleblockhalf == DoubleBlockHalf.UPPER) {
-            BlockPos blockpos = pPos.below();
-            BlockState blockstate = pLevel.getBlockState(blockpos);
-            if (blockstate.is(pState.getBlock()) && blockstate.getValue(HALF) == DoubleBlockHalf.LOWER) {
-                BlockState blockstate1 = blockstate.hasProperty(BlockStateProperties.WATERLOGGED) && blockstate.getValue(BlockStateProperties.WATERLOGGED) ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
-                pLevel.setBlock(blockpos, blockstate1, 35);
-                pLevel.levelEvent(pPlayer, 2001, blockpos, Block.getId(blockstate));
-            }
+    private static void removeOtherHalf(Level level, BlockPos pos, BlockState state, Player player) {
+        DoubleBlockHalf half = state.getValue(HALF);
+        BlockPos otherPos = half == DoubleBlockHalf.LOWER ? pos.above() : pos.below();
+        BlockState otherState = level.getBlockState(otherPos);
+        if (!otherState.is(state.getBlock()) || otherState.getValue(HALF) == half) {
+            return;
         }
+
+        if (!level.isClientSide && !player.isCreative() && half == DoubleBlockHalf.UPPER) {
+            Block.dropResources(otherState, level, otherPos, null, player, player.getMainHandItem());
+        }
+
+        BlockState replacement = otherState.hasProperty(BlockStateProperties.WATERLOGGED)
+                && otherState.getValue(BlockStateProperties.WATERLOGGED)
+                ? Blocks.WATER.defaultBlockState()
+                : Blocks.AIR.defaultBlockState();
+        level.setBlock(otherPos, replacement, 35);
+        level.levelEvent(player, 2001, otherPos, Block.getId(otherState));
     }
 
     @Override

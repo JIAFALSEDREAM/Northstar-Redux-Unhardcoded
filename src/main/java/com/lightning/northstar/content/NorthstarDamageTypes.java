@@ -18,7 +18,10 @@ public class NorthstarDamageTypes {
     }
 
     public static void bootstrap(BootstrapContext<DamageType> context) {
-        new DamageTypeBuilder(SUFFOCATION).scaling(DamageScaling.NEVER).register(context);
+        new DamageTypeBuilder(SUFFOCATION)
+                .scaling(DamageScaling.NEVER)
+                .exhaustion(0.1F)
+                .register(context);
     }
 
 }

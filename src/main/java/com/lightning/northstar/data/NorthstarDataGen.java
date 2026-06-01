@@ -18,6 +18,7 @@ import net.minecraft.data.PackOutput;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
@@ -68,7 +69,10 @@ public class NorthstarDataGen {
 
         // Recipes:
         generator.addProvider(event.includeServer(), new NorthstarCompactingRecipeGen(output, lookupProvider));
-        generator.addProvider(event.includeServer(), new NorthstarCreateAdditionLiquidBurningRecipeGen(output, lookupProvider));
+        // This provider extends a Create Crafts & Additions datagen class, so only load it when CCA is present.
+        if (ModList.get().isLoaded("createaddition")) {
+            generator.addProvider(event.includeServer(), new NorthstarCreateAdditionLiquidBurningRecipeGen(output, lookupProvider));
+        }
         generator.addProvider(event.includeServer(), new NorthstarCrushingRecipeGen(output, lookupProvider));
         generator.addProvider(event.includeServer(), new NorthstarElectrolysisRecipeGen(output, lookupProvider));
         generator.addProvider(event.includeServer(), new NorthstarEngravingRecipeGen(output, lookupProvider));

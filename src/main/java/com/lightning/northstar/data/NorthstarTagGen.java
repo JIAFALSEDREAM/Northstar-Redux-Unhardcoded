@@ -1,9 +1,5 @@
 package com.lightning.northstar.data;
 
-import com.copycatsplus.copycats.CCBlocks;
-import com.drmangotea.tfmg.registry.TFMGBlocks;
-import com.drmangotea.tfmg.registry.TFMGFluids;
-import com.jesz.createdieselgenerators.CDGBlocks;
 import com.lightning.northstar.Northstar;
 import com.lightning.northstar.content.NorthstarDamageTypes;
 import com.lightning.northstar.content.NorthstarTags.NorthstarBlockTags;
@@ -71,7 +67,7 @@ public class NorthstarTagGen {
                         AllBlocks.COPPER_SCAFFOLD.get(), AllBlocks.PACKAGER.get(), AllBlocks.REPACKAGER.get(),
                         AllBlocks.COPYCAT_BASE.get())
 
-                .opt(CCBlocks.COPYCAT_BASE.get());
+                .opt(ModCompat.COPYCATS, "copycat_base");
 
         tags.tag(NorthstarBlockTags.ARGYRE_REPLACEABLE)
                 .add(Blocks.AIR, Blocks.CAVE_AIR,
@@ -108,8 +104,8 @@ public class NorthstarTagGen {
                         Blocks.PINK_STAINED_GLASS_PANE)
                 .add(BlockTags.WALLS)
                 .add(Blocks.FURNACE, Blocks.BLAST_FURNACE, Blocks.SMOKER)
-                .opt(CDGBlocks.HUGE_DIESEL_ENGINE.get())
-                .opt(TFMGBlocks.LARGE_ENGINE.get());
+                .opt(ModCompat.CDG, "huge_diesel_engine")
+                .opt(ModCompat.TFMG, "large_engine");
 
         tags.tag(NorthstarBlockTags.MARS_DEEP_STONE_REPLACEABLE)
                 .add(Blocks.TUFF)
@@ -234,7 +230,7 @@ public class NorthstarTagGen {
 
         tags.tag(NorthstarFluidTags.BREATHABLE)
                 .add(NorthstarFluidTags.IS_OXY)
-                .opt(TFMGFluids.AIR.get());
+                .opt(ModCompat.TFMG, "air");
 
         tags.tag(NorthstarFluidTags.COMPAT_CBC_MOLTEN_CAST_IRON)
                 .opt(ModCompat.CBC, "molten_cast_iron");

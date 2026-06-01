@@ -1,7 +1,6 @@
 package com.lightning.northstar.block.entity;
 
 import com.google.common.collect.Lists;
-import com.lightning.northstar.Northstar;
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -33,7 +32,6 @@ public class OxygenBubbleGeneratorBlockEntity extends BlockEntity implements IHa
 
     public static void tick(Level pLevel, BlockPos pPos, BlockState state, OxygenBubbleGeneratorBlockEntity pBlockEntity) {
         ++pBlockEntity.tickCount;
-        //Northstar.LOGGER.debug("big fart");
         long i = pLevel.getGameTime();
         applyEffects(pLevel, pPos, pBlockEntity.effectBlocks);
         if (i % 40L == 0L) {
@@ -49,9 +47,7 @@ public class OxygenBubbleGeneratorBlockEntity extends BlockEntity implements IHa
         int i1 = pPos.getZ();
         AABB aabb = (new AABB((double) (k - 50), (double) (l - 50), (double) (i1 - 50), (double) (k + 50), (double) (l + 50), (double) (i1 + 50))).inflate((double) j).expandTowards(0.0D, (double) pLevel.getHeight(), 0.0D);
         List<Player> list = pLevel.getEntitiesOfClass(Player.class, aabb);
-        Northstar.LOGGER.debug("{}", list);
         if (!list.isEmpty()) {
-            Northstar.LOGGER.debug("biggus fartus");
             for (Player player : list) {
 
                 player.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 260, 0, true, false));

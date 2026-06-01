@@ -1,7 +1,5 @@
 package com.lightning.northstar.data;
 
-import com.drmangotea.tfmg.registry.TFMGFluids;
-import com.jesz.createdieselgenerators.CDGFluids;
 import com.lightning.northstar.Northstar;
 import com.lightning.northstar.content.NorthstarRegistries;
 import com.lightning.northstar.content.NorthstarTags.NorthstarFluidTags;
@@ -43,37 +41,37 @@ public class NorthstarFuelTypeGen {
                 .build());
 
         context.register(key("cdg_biodiesel"), FuelType.builder()
-                .fluid(CDGFluids.BIODIESEL)
+                .fluid(ModCompat.CDG, "biodiesel")
                 .combustionEngine(0.04f, 16)
                 .build());
 
         context.register(key("cdg_diesel"), FuelType.builder()
-                .fluid(CDGFluids.DIESEL)
+                .fluid(ModCompat.CDG, "diesel")
                 .combustionEngine(0.04f, 32)
                 .build());
 
         context.register(key("cdg_gasoline"), FuelType.builder()
-                .fluid(CDGFluids.GASOLINE)
+                .fluid(ModCompat.CDG, "gasoline")
                 .combustionEngine(0.04f, 32)
                 .build());
 
         context.register(key("tfmg_diesel"), FuelType.builder()
-                .fluid(TFMGFluids.DIESEL)
+                .fluid(ModCompat.TFMG, "diesel")
                 .combustionEngine(1, 16)
                 .build());
 
         context.register(key("tfmg_gasoline"), FuelType.builder()
-                .fluid(TFMGFluids.GASOLINE)
+                .fluid(ModCompat.TFMG, "gasoline")
                 .combustionEngine(1, 16)
                 .build());
 
         context.register(key("tfmg_naphtha"), FuelType.builder()
-                .fluid(TFMGFluids.NAPHTHA)
+                .fluid(ModCompat.TFMG, "naphtha")
                 .gjPerMb(0.75f)
                 .build());
 
         context.register(key("tfmg_kerosene"), FuelType.builder()
-                .fluid(TFMGFluids.KEROSENE)
+                .fluid(ModCompat.TFMG, "kerosene")
                 .gjPerMb(1.00f)
                 .build());
     }
