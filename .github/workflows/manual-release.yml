@@ -1,0 +1,111 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Mod version to build, for example 0.5.5+1.21.1"
+        required: true
+        type: string
+      tag:
+        description: "Git tag to create. Defaults to v<version> when empty."
+        required: false
+        type: string
+      prerelease:
+        description: "Mark the GitHub release as a prerelease"
+        required: true
+        default: true
+        type: boolean
+      release_notes:
+        description: "Release notes body. Leave empty for a short automatic note."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set release variables
+        id: vars
+        shell: bash
+        run: |
+          VERSION="$RELEASE_VERSION"
+          TAG="$RELEASE_TAG"
+          if [ -z "$TAG" ]; then
+            TAG="v$VERSION"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ inputs.tag }}
+
+      - name: Make Gradle wrapper executable
+        shell: bash
+        run: chmod +x ./gradlew
+
+      - name: Build
+        shell: bash
+        run: ./gradlew build -Pnorthstar.version="$RELEASE_VERSION" --console=plain --no-daemon
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.version }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Collect release jar
+        id: asset
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          mapfile -t jars < <(find build/libs -maxdepth 1 -type f -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" | sort)
+          if [ "${#jars[@]}" -ne 1 ]; then
+            printf 'Expected exactly one primary jar, found %s:\n' "${#jars[@]}"
+            printf '%s\n' "${jars[@]}"
+            exit 1
+          fi
+          cp "${jars[0]}" release-assets/
+          echo "jar=release-assets/$(basename "${jars[0]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        shell: bash
+        run: |
+          NOTES="$RELEASE_NOTES"
+          if [ -z "$NOTES" ]; then
+            NOTES="Manual build for $RELEASE_VERSION."
+          fi
+
+          args=(
+            "$RELEASE_TAG"
+            "$RELEASE_JAR"
+            "--title" "Northstar Redux Unhardcoded $RELEASE_VERSION"
+            "--notes" "$NOTES"
+          )
+
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            args+=("--prerelease")
+          fi
+
+          gh release create "${args[@]}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.vars.outputs.version }}
+          RELEASE_TAG: ${{ steps.vars.outputs.tag }}
+          RELEASE_JAR: ${{ steps.asset.outputs.jar }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
