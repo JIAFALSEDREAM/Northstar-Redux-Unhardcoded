@@ -9,7 +9,8 @@ plugins {
 }
 
 version = providers.gradleProperty("northstar.version")
-    .getOrElse("0.5.4+1.21.1") // https://semver.org/
+    // Release builds pass the real version from the git tag via -Pnorthstar.version.
+    .getOrElse("0.0.0+local") // https://semver.org/
 group = "com.lightning.northstar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 
 java {
