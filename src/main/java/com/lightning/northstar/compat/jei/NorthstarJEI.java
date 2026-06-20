@@ -4,6 +4,8 @@ import com.lightning.northstar.Northstar;
 import com.lightning.northstar.block.tech.circuit_engraver.EngravingRecipe;
 import com.lightning.northstar.block.tech.electrolysis_machine.ElectrolysisRecipe;
 import com.lightning.northstar.block.tech.ice_box.FreezingRecipe;
+import com.lightning.northstar.api.planet.PlanetDefinition;
+import com.lightning.northstar.api.planet.PlanetRegistry;
 import com.lightning.northstar.compat.jei.category.ElectrolysisCategory;
 import com.lightning.northstar.compat.jei.category.EngravingCategory;
 import com.lightning.northstar.compat.jei.category.FreezingCategory;
@@ -16,29 +18,41 @@ import com.lightning.northstar.content.NorthstarRegistries;
 import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
+import mezz.jei.api.registration.IExtraIngredientRegistration;
 import mezz.jei.common.util.RegistryUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @JeiPlugin
@@ -93,6 +107,19 @@ public class NorthstarJEI implements IModPlugin {
     }
 
     @Override
+    public void registerExtraIngredients(IExtraIngredientRegistration registration) {
+        registration.addExtraItemStacks(createRegistryStarMaps());
+    }
+
+    @Override
+    public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
+        List<ItemStack> missingStarMaps = createMissingRegistryStarMaps(jeiRuntime.getIngredientManager().getAllItemStacks());
+        if (!missingStarMaps.isEmpty()) {
+            jeiRuntime.getIngredientManager().addIngredientsAtRuntime(VanillaTypes.ITEM_STACK, missingStarMaps);
+        }
+    }
+
+    @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         loadCategories();
         registration.addRecipeCategories(northstarCategories.toArray(IRecipeCategory[]::new));
@@ -117,6 +144,38 @@ public class NorthstarJEI implements IModPlugin {
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         northstarCategories.forEach(c -> c.registerCatalysts(registration));
         registration.addRecipeCatalysts(FuelTypeCategory.RECIPE_TYPE, NorthstarBlocks.JET_ENGINE, NorthstarBlocks.COMBUSTION_ENGINE);
+    }
+
+    private static List<ItemStack> createRegistryStarMaps() {
+        return createMissingRegistryStarMaps(List.of());
+    }
+
+    private static List<ItemStack> createMissingRegistryStarMaps(Collection<ItemStack> existingItems) {
+        List<ItemStack> starMaps = new ArrayList<>();
+        Set<String> emittedPlanets = new HashSet<>();
+        Set<ResourceKey<Level>> emittedDimensions = new HashSet<>();
+        for (ItemStack item : existingItems) {
+            if (item.is(NorthstarItems.STAR_MAP.get())) {
+                String planet = item.get(NorthstarDataComponents.PLANET);
+                if (planet != null) {
+                    emittedPlanets.add(planet);
+                }
+            }
+        }
+        for (PlanetDefinition planet : PlanetRegistry.all()) {
+            if (!planet.reachableByRocket() || planet.dimension() == null || !emittedDimensions.add(planet.dimension()) || !emittedPlanets.add(planet.id())) {
+                continue;
+            }
+            starMaps.add(createStarMap(planet.id()));
+        }
+        return starMaps;
+    }
+
+    private static ItemStack createStarMap(String planet) {
+        ItemStack item = new ItemStack(NorthstarItems.STAR_MAP.get());
+        item.set(DataComponents.CUSTOM_NAME, Component.translatable("item.northstar.star_map_" + planet).setStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withItalic(false)));
+        item.set(NorthstarDataComponents.PLANET, planet);
+        return item;
     }
 
     private class CategoryBuilder<T extends Recipe<?>> extends CreateRecipeCategory.Builder<T> {
