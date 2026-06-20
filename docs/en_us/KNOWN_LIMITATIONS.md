@@ -15,6 +15,9 @@ framework yet.
 - Automatic dimension, biome, chunk-generator, or worldgen creation.
 - Fully data-driven sky, fog, cloud, weather particle, and horizon rendering.
 - Per-planet renderer colors beyond the current `SkyProfile` presets.
+- Per-planet rocket fuel requirements. Fuel fluids can already be defined
+  through the `FuelType` data registry, but planets cannot yet require a
+  specific fuel type, fuel tag, or fuel category such as fantasy fuels.
 
 ## Current Compatibility Choices
 
