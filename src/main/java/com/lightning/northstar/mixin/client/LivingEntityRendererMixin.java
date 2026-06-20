@@ -1,5 +1,6 @@
 package com.lightning.northstar.mixin.client;
 
+import com.lightning.northstar.content.NorthstarTags.NorthstarEntityTags;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.model.EntityModel;
@@ -24,7 +25,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     @Redirect(method = "render(Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/WalkAnimationState;speed(F)F"))
     private float changeWalkAnimationSpeed(WalkAnimationState instance, float partialTick, @Local(argsOnly = true) T entity) {
-        float gravityMultiplier = entity.onGround() ? 1 :
+        float gravityMultiplier = entity.onGround() || NorthstarEntityTags.IGNORES_PLANET_GRAVITY.matches(entity) ? 1 :
                 Mth.clamp((float) NorthstarPlanets.getLivingGravityMultiplier(entity.level().dimension()), 0.25f, 1f);
 
         if (!entity.onGround() && gravityMultiplier < 0.7 && entity.isInWater() && !entity.isVisuallySwimming() && !entity.isFallFlying()) {

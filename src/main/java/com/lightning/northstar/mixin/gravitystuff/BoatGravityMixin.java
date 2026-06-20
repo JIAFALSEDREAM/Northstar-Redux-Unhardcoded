@@ -1,5 +1,6 @@
 package com.lightning.northstar.mixin.gravitystuff;
 
+import com.lightning.northstar.content.NorthstarTags.NorthstarEntityTags;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
@@ -19,7 +20,7 @@ public class BoatGravityMixin {
         Boat entity = (Boat) (Object) this;
         Vec3 velocity = entity.getDeltaMovement();
         double planetGravity = NorthstarPlanets.getBoatGravityMultiplier(entity.level().dimension());
-        if (!entity.isNoGravity() && !entity.isInWater() && !entity.isInLava()) {
+        if (!entity.isNoGravity() && !NorthstarEntityTags.IGNORES_PLANET_GRAVITY.matches(entity) && !entity.isInWater() && !entity.isInLava()) {
             double newGrav = CONSTANT * planetGravity;
             entity.setDeltaMovement(velocity.x(), velocity.y() + CONSTANT - newGrav, velocity.z());
         }

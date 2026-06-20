@@ -221,6 +221,8 @@ public class NorthstarTagGen {
                 .add(EntityType.WITHER_SKELETON)
                 .add(EntityType.ZOMBIE)
                 .add(EntityType.ZOMBIE_HORSE);
+
+        tags.tag(NorthstarEntityTags.IGNORES_PLANET_GRAVITY);
     }
 
     private static void fluids(RegistrateTagsProvider.IntrinsicImpl<Fluid> provider) {

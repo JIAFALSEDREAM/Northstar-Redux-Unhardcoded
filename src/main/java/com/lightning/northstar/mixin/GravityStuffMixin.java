@@ -1,6 +1,7 @@
 package com.lightning.northstar.mixin;
 
 import com.lightning.northstar.contraption.rocket.RocketHandler;
+import com.lightning.northstar.content.NorthstarTags.NorthstarEntityTags;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import com.lightning.northstar.world.oxygen.NorthstarOxygen;
 import net.minecraft.util.Mth;
@@ -41,7 +42,7 @@ public class GravityStuffMixin {
         if (entity.isFallFlying() || entity.isInFluidType()) {
             planetGravity = 1;
         }
-        if (!entity.isNoGravity() && !entity.isInWater() && !entity.isInLava() && !entity.hasEffect(MobEffects.SLOW_FALLING)) {
+        if (!entity.isNoGravity() && !NorthstarEntityTags.IGNORES_PLANET_GRAVITY.matches(entity) && !entity.isInWater() && !entity.isInLava() && !entity.hasEffect(MobEffects.SLOW_FALLING)) {
             float dust_push = 0;
             if (entity.level().getRainLevel(0) > 0 && entity.level().getRawBrightness(entity.blockPosition(), -1) == 16 && !entity.isSpectator() && (NorthstarPlanets.hasDustStormPush(entity.level()) && !NorthstarOxygen.hasOxygen(entity.level(), entity.getEyePosition()))
                     && entity.level().isInWorldBounds(entity.blockPosition()) && !RocketHandler.isInRocket(entity)) {
@@ -83,7 +84,7 @@ public class GravityStuffMixin {
     public void calculateFallDamage(float pFallDistance, float pDamageMultiplier, CallbackInfoReturnable<Integer> info) {
         LivingEntity entity = (LivingEntity) (Object) this;
 
-        if (!NorthstarPlanets.hasNormalGrav(entity.level().dimension())) {
+        if (!NorthstarPlanets.hasNormalGrav(entity.level().dimension()) && !NorthstarEntityTags.IGNORES_PLANET_GRAVITY.matches(entity)) {
             MobEffectInstance mobeffectinstance = entity.getEffect(MobEffects.JUMP);
             double mult = NorthstarPlanets.getLivingGravityMultiplier(entity.level().dimension());
             float f = (float) (mobeffectinstance == null ? 0.0F : (float) (mobeffectinstance.getAmplifier() + 1) * mult);

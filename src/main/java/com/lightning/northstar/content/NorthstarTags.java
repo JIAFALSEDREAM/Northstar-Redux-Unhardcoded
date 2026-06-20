@@ -291,7 +291,8 @@ public class NorthstarTags {
 
         CAN_SURVIVE_COLD,
         CAN_SURVIVE_HEAT,
-        DOESNT_REQUIRE_OXYGEN;
+        DOESNT_REQUIRE_OXYGEN,
+        IGNORES_PLANET_GRAVITY;
 
         public final TagKey<EntityType<?>> tag;
 

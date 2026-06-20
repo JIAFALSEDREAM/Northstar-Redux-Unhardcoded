@@ -1,5 +1,6 @@
 package com.lightning.northstar.mixin.gravitystuff;
 
+import com.lightning.northstar.content.NorthstarTags.NorthstarEntityTags;
 import com.lightning.northstar.world.dimension.NorthstarPlanets;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
@@ -20,7 +21,7 @@ public class ThrowableProjectileGravityMixin {
         Entity entity = (Entity) (Object) this;
         Vec3 velocity = entity.getDeltaMovement();
         double planetGravity = NorthstarPlanets.getThrowableGravityMultiplier(entity.level().dimension());
-        if (!entity.isNoGravity()) {
+        if (!entity.isNoGravity() && !NorthstarEntityTags.IGNORES_PLANET_GRAVITY.matches(entity)) {
             double newGrav = CONSTANT * planetGravity;
             entity.setDeltaMovement(velocity.x(), velocity.y() + CONSTANT - newGrav, velocity.z());
         }
