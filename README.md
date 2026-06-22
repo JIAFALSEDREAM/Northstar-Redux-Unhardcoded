@@ -1,5 +1,15 @@
 # Create: Northstar - Redux Unhardcoded
 
+## Archived / No Longer Maintained
+
+**This repository is archived and is no longer maintained.** Upstream
+Create: Northstar - Redux has implemented data-driven planet support, so the
+main purpose of this temporary hardcode-removal fork has been fulfilled. New
+work should target upstream instead of this repository.
+
+**本仓库已归档，不再维护。** 上游 Create: Northstar - Redux 已经实现数据驱动星球
+支持，因此这个临时去硬编码 fork 的主要目的已经达成。后续开发应转向上游项目。
+
 Languages: [English](#english) | [中文](#中文)
 
 ## English
